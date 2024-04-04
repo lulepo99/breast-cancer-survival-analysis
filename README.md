@@ -20,7 +20,7 @@ This project was developed by [Elena Sasso](https://github.com/elenasasso), [Mar
 
 
 ## How to Use This Repository
-If you're interested in running the analysis yourself, please see the `SCRIPTS` folder. Ensure you have R installed.
+If you're interested in running the analysis yourself, please see the [SCRIPTS](./SCRIPTS/) folder. Ensure you have R installed.
 
 
 ## License
