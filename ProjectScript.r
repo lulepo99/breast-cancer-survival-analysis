@@ -1,4 +1,3 @@
-#SCRIPT
 
 assign("df_with_tmb", a_00_data_clinical_sample)
 rm(a_00_data_clinical_sample)
