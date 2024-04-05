@@ -1,4 +1,3 @@
-
 assign("df_with_tmb", a_00_data_clinical_sample)
 rm(a_00_data_clinical_sample)
 df_with_relapse <- a_00_data_clinical_patient
@@ -37,6 +36,18 @@ METABRIC_NEW_GENES <- total3
 
 rm(expr_transposed, total3, a_00_data_mrna_illumina_microarray_zscores_ref_diploid_samples, a_00_data_mutations)
 
+p_val <- c()
+
+for (i in 35:20637) {
+  y <- wilcox.test(as.numeric(METABRIC_NEW_GENES[i][METABRIC_NEW_GENES$pam50_._claudin.low_subtype=='LumA',]), 
+                   as.numeric(METABRIC_NEW_GENES[i][METABRIC_NEW_GENES$pam50_._claudin.low_subtype=='LumB',]), 
+                   paired = FALSE)$p.value
+  names(y) <- colnames(METABRIC_NEW_GENES[i])
+  p_val <- c(p_val, y)
+}
+
+p_adj <- p.adjust(p_val, method = "bonferroni")
+DE_genes <- p_adj[p_adj<0.05]
 
 
 
