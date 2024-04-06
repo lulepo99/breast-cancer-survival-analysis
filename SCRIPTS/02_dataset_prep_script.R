@@ -1,6 +1,6 @@
 library(dplyr)
 
-# I used "NC" instead of "NA" or "" to xreate the new columns because these values are not 
+# I used "NC" instead of "NA" or "" to create the new columns because these values are not 
 # properly NA (they cannot simply be classified)
 
 
@@ -55,6 +55,7 @@ METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
     TRUE ~ "NC"
   ))
 
+
 # moving the new two variables after the other clinical ones
 
 METABRIC_NEW <- METABRIC_NEW[,c(1:34, 208:209,35:207)]
@@ -63,16 +64,7 @@ METABRIC_NEW_GENES <- METABRIC_NEW_GENES[,c(1:34, 20811:20812,35:20810)]
 
 
 
-# Deleting possible LumA and LumB patients without ki67_proliferation_index
-
-METABRIC_NEW <- METABRIC_NEW %>%
-  filter(!(receptor_subtype %in% c("LumA", "LumB") & ki67_proliferation_index == "NC"))
-
-METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
-  filter(!(receptor_subtype %in% c("LumA", "LumB") & ki67_proliferation_index == "NC"))
-
-
-# Deleting patients based on NA and "Died of Other Causes" value
+# Deleting patients based on NA and "Died of Other Causes" value (as "prova" to be sure not to do a mess)
 
 prova_new <- METABRIC_NEW %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
@@ -85,8 +77,6 @@ prova_new_genes <- METABRIC_NEW_GENES %>%
          pam50_._claudin.low_subtype!="NC",
          er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
          !is.na(tumor_size))
-
-
 
 
 
