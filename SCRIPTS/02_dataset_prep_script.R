@@ -80,11 +80,12 @@ prova_new_genes <- METABRIC_NEW_GENES %>%
 
 
 
-# Converting age_at_diagnosis as numeric
+# Converting age_at_diagnosis in a numeric variable
 
 METABRIC_NEW$age_at_diagnosis=as.integer(METABRIC_NEW$age_at_diagnosis)
 
 METABRIC_NEW_GENES$age_at_diagnosis=as.integer(METABRIC_NEW_GENES$age_at_diagnosis)
+
 
 
 # Rename the column "overall_survival_months" to "overall_survival_years"
