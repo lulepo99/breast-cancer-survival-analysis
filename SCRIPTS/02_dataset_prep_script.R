@@ -95,5 +95,12 @@ METABRIC_NEW_GENES$age_at_diagnosis=as.integer(METABRIC_NEW_GENES$age_at_diagnos
 colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "overall_survival_months"] <- "overall_survival_years"
 METABRIC_NEW$overall_survival_years <- METABRIC_NEW$overall_survival_years / 12
 
-colnames(METABRIC_NEW_GENES)[colnames(METABRIC_NEW_GENES) == "RFS_MONTHS"] <- "RFS_years"
-METABRIC_NEW_GENES$RFS_years <- METABRIC_NEW_GENES$RFS_years / 12
+colnames(METABRIC_NEW_GENES)[colnames(METABRIC_NEW_GENES) == "overall_survival_months"] <- "overall_survival_years"
+METABRIC_NEW_GENES$overall_survival_years <- METABRIC_NEW_GENES$overall_survival_years / 12
+
+
+colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_NEW$RFS_years <- METABRIC_NEW$RFS_years / 12
+
+colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_NEW$RFS_years <- METABRIC_NEW$RFS_years / 12
