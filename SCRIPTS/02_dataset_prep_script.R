@@ -70,13 +70,13 @@ prova_new <- METABRIC_NEW %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
          pam50_._claudin.low_subtype!="NC",
          er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
-         !is.na(tumor_size))
+         !is.na(tumor_size), !is.na(neoplasm_histologic_grade))
 
 prova_new_genes <- METABRIC_NEW_GENES %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
          pam50_._claudin.low_subtype!="NC",
          er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
-         !is.na(tumor_size))
+         !is.na(tumor_size), !is.na(neoplasm_histologic_grade))
 
 
 
