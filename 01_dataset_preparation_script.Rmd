@@ -1,6 +1,6 @@
 ---
-title: "01_dataset_preparation_script"
-author: "Trio"
+title: "01 - Dataset preprocessing"
+author: "Elena Sasso, Luca Lepore, Marco Cominelli"
 date: "2024-04-18"
 output: html_document
 ---
@@ -18,7 +18,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
-plot(pressure)
 ```
 
 
