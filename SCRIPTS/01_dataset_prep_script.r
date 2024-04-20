@@ -1,3 +1,19 @@
+filename <- "https://cbioportal-datahub.s3.amazonaws.com/brca_metabric.tar.gz"
+download.file(filename, destfile = "temporary.tar.gz")
+untar("temporary.tar.gz",list=TRUE)  ## Check that all files are there (might not be the case) 
+                                     ## (you will need x, y, z)
+
+untar("temporary.tar.gz",files=c("brca_metabric/data_clinical_sample.txt",
+                                 "brca_metabric/data_clinical_patient.txt",
+                                 "brca_metabric/data_mrna_illumina_microarray_zscores_ref_diploid_samples.txt")
+     )
+
+X <- read.csv("wp2011-survey/anon-data.csv")
+
+
+
+
+
 assign("df_with_tmb", a_00_data_clinical_sample)
 rm(a_00_data_clinical_sample)
 df_with_relapse <- a_00_data_clinical_patient
