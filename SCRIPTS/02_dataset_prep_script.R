@@ -6,6 +6,9 @@ library(dplyr)
 
 # creation of the column for the ki67 proliferation index
 
+METABRIC_NEW$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
+
+
 METABRIC_NEW <- METABRIC_NEW %>%
   mutate(ki67_proliferation_index = case_when(
     X3.gene_classifier_subtype == "ER+/HER2- High Prolif" ~ "High",
