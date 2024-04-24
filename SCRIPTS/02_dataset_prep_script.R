@@ -7,6 +7,7 @@ library(dplyr)
 # creation of the column for the ki67 proliferation index
 
 METABRIC_NEW$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
+METABRIC_NEW_GENES$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
 
 
 METABRIC_NEW <- METABRIC_NEW %>%
@@ -69,13 +70,13 @@ METABRIC_NEW_GENES <- METABRIC_NEW_GENES[,c(1:34, 20811:20812,35:20810)]
 
 # Deleting patients based on NA and "Died of Other Causes" value (as "prova" to be sure not to do a mess)
 
-prova_new <- METABRIC_NEW %>%
+METABRIC_SUBSET <- METABRIC_NEW %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
          pam50_._claudin.low_subtype!="NC",
          er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
          !is.na(tumor_size), !is.na(neoplasm_histologic_grade))
 
-prova_new_genes <- METABRIC_NEW_GENES %>%
+METABRIC_SUBSET_GENES <- METABRIC_NEW_GENES %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
          pam50_._claudin.low_subtype!="NC",
          er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
@@ -85,9 +86,9 @@ prova_new_genes <- METABRIC_NEW_GENES %>%
 
 # Converting age_at_diagnosis in a numeric variable
 
-METABRIC_NEW$age_at_diagnosis=as.integer(METABRIC_NEW$age_at_diagnosis)
+METABRIC_SUBSET$age_at_diagnosis=as.integer(METABRIC_SUBSET$age_at_diagnosis)
 
-METABRIC_NEW_GENES$age_at_diagnosis=as.integer(METABRIC_NEW_GENES$age_at_diagnosis)
+METABRIC_SUBSET_GENES$age_at_diagnosis=as.integer(METABRIC_SUBSET_GENES$age_at_diagnosis)
 
 
 
@@ -95,15 +96,15 @@ METABRIC_NEW_GENES$age_at_diagnosis=as.integer(METABRIC_NEW_GENES$age_at_diagnos
 # and convert the survival time from months to year, to make the data easier to interpret and compare.
 # The same is performed for the RFS columns
 
-colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "overall_survival_months"] <- "overall_survival_years"
-METABRIC_NEW$overall_survival_years <- METABRIC_NEW$overall_survival_years / 12
+colnames(METABRIC_SUBSET)[colnames(METABRIC_SUBSET) == "overall_survival_months"] <- "overall_survival_years"
+METABRIC_SUBSET$overall_survival_years <- METABRIC_SUBSET$overall_survival_years / 12
 
-colnames(METABRIC_NEW_GENES)[colnames(METABRIC_NEW_GENES) == "overall_survival_months"] <- "overall_survival_years"
-METABRIC_NEW_GENES$overall_survival_years <- METABRIC_NEW_GENES$overall_survival_years / 12
+colnames(METABRIC_SUBSET_GENES)[colnames(METABRIC_SUBSET_GENES) == "overall_survival_months"] <- "overall_survival_years"
+METABRIC_SUBSET_GENES$overall_survival_years <- METABRIC_SUBSET_GENES$overall_survival_years / 12
 
 
-colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "RFS_MONTHS"] <- "RFS_years"
-METABRIC_NEW$RFS_years <- METABRIC_NEW$RFS_years / 12
+colnames(METABRIC_SUBSET)[colnames(METABRIC_SUBSET) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_SUBSET$RFS_years <- METABRIC_SUBSET$RFS_years / 12
 
-colnames(METABRIC_NEW)[colnames(METABRIC_NEW) == "RFS_MONTHS"] <- "RFS_years"
-METABRIC_NEW$RFS_years <- METABRIC_NEW$RFS_years / 12
+colnames(METABRIC_SUBSET_GENES)[colnames(METABRIC_SUBSET_GENES) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_SUBSET_GENES$RFS_years <- METABRIC_SUBSET_GENES$RFS_years / 12
