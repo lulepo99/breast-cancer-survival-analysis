@@ -4,11 +4,13 @@ library(dplyr)
 # properly NA (they cannot simply be classified)
 
 
-# creation of the column for the ki67 proliferation index
+# Inversion of 0 and 1 in overall_survival
 
 METABRIC_NEW$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
 METABRIC_NEW_GENES$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
 
+
+# creation of the column for the ki67 proliferation index
 
 METABRIC_NEW <- METABRIC_NEW %>%
   mutate(ki67_proliferation_index = case_when(
@@ -27,6 +29,7 @@ METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
 
 # Change the value "Positve" in "Positive" in the er_status_measured_by_ihc
 # It took 1 hour to understand why the script did not work before. Hate them all .-.
+
 METABRIC_NEW <- METABRIC_NEW %>%
   mutate(er_status_measured_by_ihc = ifelse(er_status_measured_by_ihc == "Positve", 
                                             "Positive", er_status_measured_by_ihc))
@@ -68,7 +71,7 @@ METABRIC_NEW_GENES <- METABRIC_NEW_GENES[,c(1:34, 20811:20812,35:20810)]
 
 
 
-# Deleting patients based on NA and "Died of Other Causes" value (as "prova" to be sure not to do a mess)
+# Deleting patients based on NA and "Died of Other Causes" value 
 
 METABRIC_SUBSET <- METABRIC_NEW %>%
   filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
@@ -108,3 +111,9 @@ METABRIC_SUBSET$RFS_years <- METABRIC_SUBSET$RFS_years / 12
 
 colnames(METABRIC_SUBSET_GENES)[colnames(METABRIC_SUBSET_GENES) == "RFS_MONTHS"] <- "RFS_years"
 METABRIC_SUBSET_GENES$RFS_years <- METABRIC_SUBSET_GENES$RFS_years / 12
+
+
+
+# Save the new dataframe
+
+write.csv(METABRIC_SUBSET, file = "METABRIC_SUBSET.csv", row.names = FALSE)
