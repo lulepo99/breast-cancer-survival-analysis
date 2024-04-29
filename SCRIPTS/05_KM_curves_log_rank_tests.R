@@ -79,7 +79,7 @@ fit_log_rank_RFS_grade
 
 
 
-# Despite the number of NA, I tried also for tumor stage, considering its importance
+# Despite the number of NA, I also tried for tumor stage, considering its importance
 # from a prognostic point of view. We have 975 patients out of 1285 with an available tumor stage
 # (1 = 320, 2 = 559, 3= 88, 4 = 8). We can ask to Alessia or Cappozzo if we can proceed
 # but I don't think there will be any problems (maybe if we want to introduce it 
