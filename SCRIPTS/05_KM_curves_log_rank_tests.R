@@ -73,5 +73,8 @@ fit_log_rank_RFS_grade
 # The same tests were performed also for cellularity, but in that case we do not have 
 # evidence to reject H0
 
+# Laterality is non significant, as we already know from previous from the last semester.
+# Same destiny for the histological subtypes (we never assessed it, so I tried just to be sure)
+
 
 
