@@ -78,3 +78,40 @@ fit_log_rank_RFS_grade
 
 
 
+
+# Despite the number of NA, I tried also for tumor stage, considering its importance
+# from a prognostic point of view. We have 975 patients out of 1285 with an available tumor stage
+# (1 = 320, 2 = 559, 3= 88, 4 = 8). We can ask to Alessia or Cappozzo if we can proceed
+# but I don't think there will be any problems (maybe if we want to introduce it 
+# in the Cox model). 
+
+# KM curve based on tumor stage and overall survival (p= <2e-16). It was clearly expected this result
+
+fit_KM_by_stage <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                             tumor_stage, data= METABRIC_SUBSET,
+                           subset = tumor_stage %in% c("1", "2", "3", "4"))
+
+ggsurvplot(fit_KM_by_stage, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_stage <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                 tumor_stage, data= METABRIC_SUBSET,
+                               subset = tumor_stage %in% c("1", "2", "3", "4"))
+
+fit_log_rank_stage
+
+
+
+# KM curve based on tumor stage and RFS (p= <2e-16)
+
+fit_KM_by_RFS_stage <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                             tumor_stage, data= METABRIC_SUBSET,
+                           subset = tumor_stage %in% c("1", "2", "3", "4"))
+
+ggsurvplot(fit_KM_by_RFS_stage, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_stage <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                 tumor_stage, data= METABRIC_SUBSET,
+                               subset = tumor_stage %in% c("1", "2", "3", "4"))
+
+fit_log_rank_RFS_stage
+
