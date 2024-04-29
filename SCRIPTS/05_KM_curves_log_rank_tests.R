@@ -70,7 +70,7 @@ fit_log_rank_RFS_grade <- survdiff(Surv(RFS_years, RFS_STATUS) ~
 fit_log_rank_RFS_grade
 
 
-# The same tests were performed also for cellularity, but in that case we do not 
+# The same tests were performed also for cellularity, but in that case we do not have 
 # evidence to reject H0
 
 
