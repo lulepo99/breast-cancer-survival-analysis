@@ -115,3 +115,7 @@ fit_log_rank_RFS_stage <- survdiff(Surv(RFS_years, RFS_STATUS) ~
 
 fit_log_rank_RFS_stage
 
+
+# Considering the results obtained regarding tumor stage, we can surely stratify 
+# within tumor size and pos lymph nodes. Besides, we can also evaluate a KM curve
+# based on NPI 
