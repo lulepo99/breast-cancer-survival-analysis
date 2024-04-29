@@ -1,4 +1,4 @@
-# KAPLAN MEYER CURVES AND LOG RANK TESTS
+# KAPLAN MEIER CURVES AND LOG RANK TESTS
 
 library(survival)
 library(survminer)
