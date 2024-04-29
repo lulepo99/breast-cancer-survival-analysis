@@ -40,7 +40,9 @@ fit_log_rank_RFS_receptor
 
 
 # KM curve based on neoplasm histologic grade and overall survival (p= 8e-10). 
-# The test is performed considering all the patients.
+# The test is performed considering all the patients. This difference is surely related to
+# the distribution of the grades among the receptor subtypes (see the chi-squared test
+# previously performed)
 
 fit_KM_by_grade <- survfit(Surv(overall_survival_years, overall_survival) ~ 
                                     neoplasm_histologic_grade, data= METABRIC_SUBSET)
