@@ -38,3 +38,38 @@ fit_log_rank_RFS_receptor <- survdiff(Surv(RFS_years, RFS_STATUS) ~
 fit_log_rank_RFS_receptor
 
 
+
+# KM curve based on neoplasm histologic grade and overall survival (p= 8e-10). 
+# The test is performed considering all the patients.
+
+fit_KM_by_grade <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                                    neoplasm_histologic_grade, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_grade, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_grade <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                        neoplasm_histologic_grade, data= METABRIC_SUBSET)
+
+fit_log_rank_grade
+
+
+
+# KM curve based on receptor subtype and RFS (p= 2e-06). The pattern is very similar
+# to the previous one
+
+fit_KM_by_RFS_grade <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                             neoplasm_histologic_grade, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_RFS_grade, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_grade <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                 neoplasm_histologic_grade, data= METABRIC_SUBSET)
+
+fit_log_rank_RFS_grade
+
+
+# The same tests were performed also for cellularity, but in that case we do not 
+# evidence to reject H0
+
+
+
