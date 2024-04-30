@@ -163,4 +163,43 @@ fit_log_rank_RFS_size
 
 
 
+# Creation of the column for the pos lymph nodes stage
+
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(pos_lymph_nodes_stage = case_when (
+    lymph_nodes_examined_positive == 0 ~ "pN0",
+    lymph_nodes_examined_positive > 0 & lymph_nodes_examined_positive <= 3 ~ "pN1",
+    lymph_nodes_examined_positive > 3 & lymph_nodes_examined_positive <= 9 ~ "pN2",
+    lymph_nodes_examined_positive > 9 ~ "pN3"
+  ))
+
+
+
+# KM curve based on pos lymph nodes and overall survival (p= <2e-16)
+
+fit_KM_by_pos_nodes <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                            pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_pos_nodes, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_pos_nodes <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                     pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+
+fit_log_rank_pos_nodes
+
+
+
+# KM curve based on pos lymph nodes and RFS (p= <2e-16)
+
+fit_KM_by_RFS_pos_nodes <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                                 pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_pos_RFS_nodes, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_pos_nodes <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                         pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+
+fit_log_rank_RFS_pos_nodes
+
+
 
