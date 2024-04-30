@@ -135,7 +135,7 @@ METABRIC_SUBSET$tumor_size_stage <- factor(METABRIC_SUBSET$tumor_size_stage, lev
 
 
 
-# KM curve based on tumor_size and overall survival (p= <2e-16)
+# KM curve based on tumor size and overall survival (p= <2e-16)
 
 fit_KM_by_size <- survfit(Surv(overall_survival_years, overall_survival) ~ 
                              tumor_size_stage, data= METABRIC_SUBSET)
@@ -146,3 +146,21 @@ fit_log_rank_size <- survdiff(Surv(overall_survival_years, overall_survival) ~
                                 tumor_size_stage, data= METABRIC_SUBSET)
 
 fit_log_rank_size
+
+
+
+# KM curve based on tumor size and RFS (p= p= 1e-13)
+
+fit_KM_by_RFS_size <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                            tumor_size_stage, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_RFS_size, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_size <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                    tumor_size_stage, data= METABRIC_SUBSET)
+
+fit_log_rank_RFS_size
+
+
+
+
