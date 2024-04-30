@@ -32,8 +32,6 @@ df_with_relapse$patient_id <- as.integer(substr(df_with_relapse$PATIENT_ID, 4, 7
 total2 <- merge(total, df_with_relapse, by ="patient_id")
 total2 <- total2[,-c(695:716)]
 
-total2$RFS_STATUS <- factor(substr(total2$RFS_STATUS, 1, 1), levels = c("0","1"))
-
 METABRIC_NEW <- total2[,c(1:31,694:696,32:693)]
 
 rm(total,total2,df_with_relapse,df_with_tmb)

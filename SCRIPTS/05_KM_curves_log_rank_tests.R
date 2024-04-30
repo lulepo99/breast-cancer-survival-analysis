@@ -3,6 +3,7 @@
 library(survival)
 library(survminer)
 
+METABRIC_SUBSET$RFS_STATUS <- as.numeric(METABRIC_SUBSET$RFS_STATUS)
 
 # KM curve based on receptor subtype and overall survival (p= 9e-14). From the curve, we can see
 # lower survival rates for HER2+ and LumB. This observation aligns with the absence of Trastuzumab 
@@ -14,7 +15,7 @@ fit_KM_by_receptor <- survfit(Surv(overall_survival_years, overall_survival) ~
 
 ggsurvplot(fit_KM_by_receptor, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
 
-fit_log_rank <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+fit_log_rank_receptor <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
                            receptor_subtype, data= METABRIC_SUBSET,
                          subset =  receptor_subtype %in% c("HER2+", "LumA", "LumB", "TNBC"))
 
@@ -100,7 +101,6 @@ fit_log_rank_stage <- survdiff(Surv(overall_survival_years, overall_survival) ~
 fit_log_rank_stage
 
 
-
 # KM curve based on tumor stage and RFS (p= <2e-16)
 
 fit_KM_by_RFS_stage <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
@@ -115,7 +115,7 @@ fit_log_rank_RFS_stage <- survdiff(Surv(RFS_years, RFS_STATUS) ~
 
 fit_log_rank_RFS_stage
 
-
 # Considering the results obtained regarding tumor stage, we can surely stratify 
 # within tumor size and pos lymph nodes. Besides, we can also evaluate a KM curve
-# based on NPI 
+# based on NPI
+
