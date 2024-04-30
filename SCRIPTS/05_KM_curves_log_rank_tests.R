@@ -2,6 +2,7 @@
 
 library(survival)
 library(survminer)
+library(dplyr)
 
 METABRIC_SUBSET$RFS_STATUS <- as.numeric(METABRIC_SUBSET$RFS_STATUS)
 
@@ -57,7 +58,7 @@ fit_log_rank_grade
 
 
 
-# KM curve based on receptor subtype and RFS (p= 2e-06). The pattern is very similar
+# KM curve based on neoplasm histologic grade and RFS (p= 2e-06). The pattern is very similar
 # to the previous one
 
 fit_KM_by_RFS_grade <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
@@ -119,3 +120,29 @@ fit_log_rank_RFS_stage
 # within tumor size and pos lymph nodes. Besides, we can also evaluate a KM curve
 # based on NPI
 
+
+
+# Creation of the column for the categorization of tumor size based on TNM classification 
+
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(tumor_size_stage = case_when (
+     tumor_size <= 20 ~ "T1",
+     tumor_size > 20 & tumor_size <= 50 ~ "T2",
+     tumor_size > 50 ~ "T3"
+  ))
+
+METABRIC_SUBSET$tumor_size_stage <- factor(METABRIC_SUBSET$tumor_size_stage, level= c("T1", "T2", "T3"))
+
+
+
+# KM curve based on tumor_size and overall survival (p= <2e-16)
+
+fit_KM_by_size <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                             tumor_size_stage, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_size, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_size <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                tumor_size_stage, data= METABRIC_SUBSET)
+
+fit_log_rank_size
