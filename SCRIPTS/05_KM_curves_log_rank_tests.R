@@ -173,6 +173,9 @@ METABRIC_SUBSET <- METABRIC_SUBSET %>%
     lymph_nodes_examined_positive > 9 ~ "pN3"
   ))
 
+METABRIC_SUBSET$pos_lymph_nodes_stage <- factor(METABRIC_SUBSET$pos_lymph_nodes_stage, 
+                                                level= c("pN0", "pN1", "pN2", "pN3"))
+
 
 
 # KM curve based on pos lymph nodes and overall survival (p= <2e-16)
