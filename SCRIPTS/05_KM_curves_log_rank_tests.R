@@ -163,7 +163,7 @@ fit_log_rank_RFS_size
 
 
 
-# Creation of the column for the pos lymph nodes stage
+# Creation of the column for the pos lymph nodes stage based on TNM classification
 
 METABRIC_SUBSET <- METABRIC_SUBSET %>%
   mutate(pos_lymph_nodes_stage = case_when (
