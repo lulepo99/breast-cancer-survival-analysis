@@ -149,7 +149,7 @@ fit_log_rank_size
 
 
 
-# KM curve based on tumor size and RFS (p= p= 1e-13)
+# KM curve based on tumor size and RFS (p= 1e-13)
 
 fit_KM_by_RFS_size <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
                             tumor_size_stage, data= METABRIC_SUBSET)
