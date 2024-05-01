@@ -1,0 +1,78 @@
+library(survival)
+library(survminer)
+library(ggplot2)
+library(tidyverse)
+
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+      data = cox2)
+summary(a)
+
+#remove the variable death from cancer
+cox2 <- METABRIC_COX_SUBSET[,-24]
+
+
+#transformation in factors
+cox2$type_of_breast_surgery <- as.factor(cox2$type_of_breast_surgery)
+cox2$cancer_type_detailed <- as.factor(cox2$cancer_type_detailed)
+cox2$cellularity <- as.factor(cox2$cellularity)
+cox2$chemotherapy <- as.factor(cox2$chemotherapy)
+cox2$cohort <- as.factor(cox2$cohort)
+cox2$er_status_measured_by_ihc <- as.factor(cox2$er_status_measured_by_ihc)
+cox2$neoplasm_histologic_grade <- as.factor(cox2$neoplasm_histologic_grade)
+cox2$her2_status <- as.factor(cox2$her2_status)
+cox2$tumor_other_histologic_subtype <- as.factor(cox2$tumor_other_histologic_subtype)
+cox2$hormone_therapy <- as.factor(cox2$hormone_therapy)
+cox2$inferred_menopausal_state <- as.factor(cox2$inferred_menopausal_state)
+cox2$integrative_cluster <- as.factor(cox2$integrative_cluster)
+cox2$primary_tumor_laterality <- as.factor(cox2$primary_tumor_laterality)
+cox2$oncotree_code <- as.factor(cox2$oncotree_code)
+cox2$pr_status <- as.factor(cox2$pr_status)
+cox2$radio_therapy <- as.factor(cox2$radio_therapy)
+cox2$tumor_stage <- as.factor(cox2$tumor_stage)
+cox2$RFS_STATUS <- as.factor(cox2$RFS_STATUS)
+cox2$pik3ca_mut <- as.factor(cox2$pik3ca_mut)
+cox2$tp53_mut <- as.factor(cox2$tp53_mut)
+cox2$brca_mut <- as.factor(cox2$brca_mut)
+cox2$akt_mut <- as.factor(cox2$akt_mut)
+cox2$pten_mut <- as.factor(cox2$pten_mut)
+cox2$cdh1_mut <- as.factor(cox2$cdh1_mut)
+
+
+#In all passages I remove the variables that causing warnings
+cox3 <- cox2[,-c(3,25)]
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+           data = cox3)
+summary(a)
+
+cox4 <- cox3[,-9]
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+           data = cox4)
+summary(a)
+
+cox5 <- cox4[,-5]
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+           data = cox5)
+summary(a)
+
+cox6 <- cox5[,-14]
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+           data = cox6)
+summary(a)
+
+
+#Finally this model doesn't cause any warnings
+cox7 <- cox6[,-c(13,20)]
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+           data = cox7)
+summary(a)
+
+
+#keeping only the significant variables
+#cox.zph(a)
+b <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis + 
+             er_status_measured_by_ihc + pr_status + tumor_stage + RFS_years + 
+             pik3ca_mut + tp53_mut , data = cox7)
+
+summary(b)
+cox.zph(b)
+
