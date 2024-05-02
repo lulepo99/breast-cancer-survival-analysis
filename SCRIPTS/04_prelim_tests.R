@@ -91,7 +91,7 @@ cor.test(METABRIC_SUBSET$tumor_size, METABRIC_SUBSET$lymph_nodes_examined_positi
 
 # ASSOCIATION TESTS
 
-# Association between the receptor subtype and the histologic grade (p-value < 2.2e-16). All the subset patients are considered.
+# Association between the receptor subtypes and the histologic grade (p-value < 2.2e-16). All the subset patients are considered.
 
 table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$neoplasm_histologic_grade[METABRIC_SUBSET$receptor_subtype!="NC"])
 
@@ -102,7 +102,7 @@ grade=table(METABRIC_SUBSET$neoplasm_histologic_grade[METABRIC_SUBSET$receptor_s
 barplot(grade, beside=TRUE, legend=c("Grade 1","Grade 2", "Grade 3"), args.legend=list(x="topleft"), main="Neoplasm Histologic Grade")
 
 
-# Association between the receptor subtype and cellularity (p-value = 10^-12). All the subset patients are considered.
+# Association between the receptor subtypes and cellularity (p-value = 10^-12). All the subset patients are considered.
 
 METABRIC_SUBSET$cellularity <- factor(METABRIC_SUBSET$cellularity, level=c("Low", "Moderate", "High"))
 
@@ -114,4 +114,14 @@ cellularity=table(METABRIC_SUBSET$cellularity[METABRIC_SUBSET$receptor_subtype!=
 
 barplot(cellularity, beside=TRUE, legend=c("Low", "Moderate", "High"), args.legend=list(x="topleft"), main="Cellularity")
 
+
+# Association between the receptor subtypes and surgery treatment (p-value = 0.0005246)
+
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""], METABRIC_SUBSET$type_of_breast_surgery[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""], METABRIC_SUBSET$type_of_breast_surgery[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""], correct=FALSE)
+
+surgery=table(METABRIC_SUBSET$type_of_breast_surgery[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""])
+
+barplot(surgery, beside=TRUE, legend=c("Breast Conserving", "Mastectomy"), args.legend=list(x="topleft"), main="Surgery Treatment")
 
