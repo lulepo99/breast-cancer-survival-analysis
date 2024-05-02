@@ -206,3 +206,63 @@ fit_log_rank_RFS_pos_nodes
 
 
 
+# KM curve based on surgery treatment and overall survival (p= 6e-11). The pattern aligns with the clinical
+# insights: mastectomy is performed on patients with more spread and aggressive breast cancer (lower
+# probability to survive). Is it worth enough to put in the final work? We will see it
+
+fit_KM_by_surgery <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                                type_of_breast_surgery, data= METABRIC_SUBSET,
+                             subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+
+ggsurvplot(fit_KM_by_surgery, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_surgery <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                   type_of_breast_surgery, data= METABRIC_SUBSET,
+                                 subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+
+fit_log_rank_surgery
+
+
+
+# KM curve based on surgery treatment and RFS (p= 4e-08)
+
+fit_KM_by_RFS_surgery <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                               type_of_breast_surgery, data= METABRIC_SUBSET,
+                             subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+
+ggsurvplot(fit_KM_by_RFS_surgery, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_surgery <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                       type_of_breast_surgery, data= METABRIC_SUBSET,
+                                     subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+
+fit_log_rank_RFS_surgery
+
+
+
+# Creation of the column NPI_stage based on the clinical algorithm
+
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(NPI_stage = case_when (
+    nottingham_prognostic_index > 5.4 ~ "Poor",
+    nottingham_prognostic_index > 3.4 & lymph_nodes_examined_positive <= 5.4 ~ "Moderate",
+    nottingham_prognostic_index > 2.4 & lymph_nodes_examined_positive <= 3.4 ~ "Good",
+    nottingham_prognostic_index <= 2.4 ~ "Excellent"
+  ))
+
+METABRIC_SUBSET$NPI_stage <- factor(METABRIC_SUBSET$NPI_stage, 
+                                                level= c("Poor", "Moderate", "Good", "Excellent"))
+
+
+
+# KM curve based on NPI categorized and overall survival
+
+fit_KM_by_NPI <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                               NPI_stage, data= METABRIC_SUBSET)
+
+ggsurvplot(fit_KM_by_NPI, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_NPI <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                               NPI_stage, data= METABRIC_SUBSET)
+
+fit_log_rank_NPI
