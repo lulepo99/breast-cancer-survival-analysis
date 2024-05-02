@@ -255,7 +255,7 @@ METABRIC_SUBSET$NPI_stage <- factor(METABRIC_SUBSET$NPI_stage,
 
 
 
-# KM curve based on NPI categorized and overall survival
+# KM curve based on NPI categorized and overall survival (p= <2e-16)
 
 fit_KM_by_NPI <- survfit(Surv(overall_survival_years, overall_survival) ~ 
                                NPI_stage, data= METABRIC_SUBSET)
