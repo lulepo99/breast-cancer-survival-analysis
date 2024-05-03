@@ -34,6 +34,133 @@ ggsurvplot(fit_KM_by_RFS_status)
 
 
 
+#-------------------------------------------------------------------------------------
+
+df_for_test <- METABRIC_SUBSET
+df_for_test$type_of_breast_surgery <- as.factor(df_for_test$type_of_breast_surgery)
+df_for_test$cancer_type_detailed <- as.factor(df_for_test$cancer_type_detailed)
+df_for_test$cellularity <- as.factor(df_for_test$cellularity)
+df_for_test$chemotherapy <- as.factor(df_for_test$chemotherapy)
+df_for_test$cohort <- as.factor(df_for_test$cohort)
+df_for_test$er_status_measured_by_ihc <- as.factor(df_for_test$er_status_measured_by_ihc)
+df_for_test$neoplasm_histologic_grade <- as.factor(df_for_test$neoplasm_histologic_grade)
+df_for_test$her2_status <- as.factor(df_for_test$her2_status)
+df_for_test$tumor_other_histologic_subtype <- as.factor(df_for_test$tumor_other_histologic_subtype)
+df_for_test$hormone_therapy <- as.factor(df_for_test$hormone_therapy)
+df_for_test$inferred_menopausal_state <- as.factor(df_for_test$inferred_menopausal_state)
+df_for_test$integrative_cluster <- as.factor(df_for_test$integrative_cluster)
+df_for_test$primary_tumor_laterality <- as.factor(df_for_test$primary_tumor_laterality)
+df_for_test$oncotree_code <- as.factor(df_for_test$oncotree_code)
+df_for_test$pr_status <- as.factor(df_for_test$pr_status)
+df_for_test$radio_therapy <- as.factor(df_for_test$radio_therapy)
+df_for_test$tumor_stage <- as.factor(df_for_test$tumor_stage)
+df_for_test$RFS_STATUS <- as.factor(df_for_test$RFS_STATUS)
 
 
 
+#laterality
+df_for_test <- df_for_test[(df_for_test$primary_tumor_laterality != ''), ]
+chi.test_laterality <- chisq.test(df_for_test$overall_survival, df_for_test$primary_tumor_laterality)
+chi.test_laterality$observed
+chi.test_laterality$expected
+chi.test_laterality    #not significant
+
+
+#receptors
+df_for_test <- df_for_test[(df_for_test$receptor_subtype != 'NC'), ]
+chi.test_receptors <- chisq.test(df_for_test$overall_survival, df_for_test$receptor_subtype)
+chi.test_receptors$observed
+chi.test_receptors$expected
+chi.test_receptors       #significant
+
+
+#neoplasm histologic grade
+df_for_test <- df_for_test[(df_for_test$neoplasm_histologic_grade != ''), ]
+chi.test_nhg <- chisq.test(df_for_test$overall_survival, df_for_test$neoplasm_histologic_grade)
+chi.test_nhg$observed
+chi.test_nhg$expected
+chi.test_nhg       #significant
+
+
+#pre-post menopausal state
+df_for_test <- df_for_test[(df_for_test$inferred_menopausal_state != ''), ]
+chi.test_ims <- chisq.test(df_for_test$overall_survival, df_for_test$inferred_menopausal_state)
+chi.test_ims$observed
+chi.test_ims$expected
+chi.test_ims       #significant x poco
+
+
+#cellularity
+df_for_test <- df_for_test[(df_for_test$cellularity != ''), ]
+chi.test_cellularity <- chisq.test(df_for_test$overall_survival, df_for_test$cellularity)
+chi.test_cellularity$observed
+chi.test_cellularity$expected
+chi.test_cellularity       #not significant
+
+
+#cellularity
+df_for_test <- df_for_test[!is.na(df_for_test$NPI_stage), ]
+chi.test_NPI <- chisq.test(df_for_test$overall_survival, df_for_test$NPI_stage)
+chi.test_NPI$observed
+chi.test_NPI$expected
+chi.test_NPI      #significant
+
+
+df_for_test <- METABRIC_COX_SUBSET
+df_for_test$pik3ca_mut <- as.factor(df_for_test$pik3ca_mut)
+df_for_test$tp53_mut <- as.factor(df_for_test$tp53_mut)
+df_for_test$brca_mut <- as.factor(df_for_test$brca_mut)
+df_for_test$akt_mut <- as.factor(df_for_test$akt_mut)
+df_for_test$pten_mut <- as.factor(df_for_test$pten_mut)
+df_for_test$cdh1_mut <- as.factor(df_for_test$cdh1_mut)
+
+
+#BRCA
+df_for_test <- df_for_test[!is.na(df_for_test$brca_mut), ]
+chi.test_brca <- chisq.test(df_for_test$overall_survival, df_for_test$brca_mut)
+chi.test_brca$observed
+chi.test_brca$expected
+chi.test_brca      #not significant, ma troppo poche mutazioni in generale
+
+
+#pik3ca
+df_for_test <- df_for_test[!is.na(df_for_test$pik3ca_mut), ]
+chi.test_pik3ca <- chisq.test(df_for_test$overall_survival, df_for_test$pik3ca_mut)
+chi.test_pik3ca$observed
+chi.test_pik3ca$expected
+chi.test_pik3ca      #not significant
+
+
+#tp53
+df_for_test <- df_for_test[!is.na(df_for_test$tp53_mut), ]
+chi.test_tp53 <- chisq.test(df_for_test$overall_survival, df_for_test$tp53_mut)
+chi.test_tp53$observed
+chi.test_tp53$expected
+chi.test_tp53      #significant
+
+
+#akt
+df_for_test <- df_for_test[!is.na(df_for_test$akt_mut), ]
+chi.test_akt <- chisq.test(df_for_test$overall_survival, df_for_test$akt_mut)
+chi.test_akt$observed
+chi.test_akt$expected
+chi.test_akt      #not significant
+
+
+#pten
+df_for_test <- df_for_test[!is.na(df_for_test$pten_mut), ]
+chi.test_pten <- chisq.test(df_for_test$overall_survival, df_for_test$pten_mut)
+chi.test_pten$observed
+chi.test_pten$expected
+chi.test_pten      #not significant
+
+
+#tp53
+df_for_test <- df_for_test[!is.na(df_for_test$cdh1_mut), ]
+chi.test_cdh1 <- chisq.test(df_for_test$overall_survival, df_for_test$cdh1_mut)
+chi.test_cdh1$observed
+chi.test_cdh1$expected
+chi.test_cdh1      #not significant
+
+
+rm(df_for_test)
