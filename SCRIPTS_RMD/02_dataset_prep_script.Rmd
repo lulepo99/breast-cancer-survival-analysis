@@ -1,0 +1,206 @@
+---
+title: "02_dataset_prep_script"
+author: "Trio"
+date: "2024-05-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We used "NC" instead of "NA" or "" to create the new columns because these values are not properly NA (they cannot simply be classified)
+
+```{r}
+library(dplyr)
+```
+
+Inversion of 0 and 1 in overall_survival
+
+```{r}
+METABRIC_NEW$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
+METABRIC_NEW_GENES$overall_survival <- ifelse(METABRIC_NEW$overall_survival==0, 1, 0)
+```
+
+Creation of the column for the ki67 proliferation index
+
+```{r}
+METABRIC_NEW <- METABRIC_NEW %>%
+  mutate(ki67_proliferation_index = case_when(
+    X3.gene_classifier_subtype == "ER+/HER2- High Prolif" ~ "High",
+    X3.gene_classifier_subtype == "ER+/HER2- Low Prolif" ~ "Low",
+    TRUE ~ "NC"
+  ))
+
+METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
+  mutate(ki67_proliferation_index = case_when(
+    X3.gene_classifier_subtype == "ER+/HER2- High Prolif" ~ "High",
+    X3.gene_classifier_subtype == "ER+/HER2- Low Prolif" ~ "Low",
+    TRUE ~ "NC"
+  ))
+
+```
+
+Change the value "Positve" in "Positive" in the er_status_measured_by_ihc
+It took 1 hour to understand why the script did not work before. Hate them all .-.
+
+```{r}
+METABRIC_NEW <- METABRIC_NEW %>%
+  mutate(er_status_measured_by_ihc = ifelse(er_status_measured_by_ihc == "Positve", 
+                                            "Positive", er_status_measured_by_ihc))
+
+METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
+  mutate(er_status_measured_by_ihc = ifelse(er_status_measured_by_ihc == "Positve", 
+                                            "Positive", er_status_measured_by_ihc))
+```
+
+Creation of the column for the receptor_subtype 
+
+```{r}
+METABRIC_NEW <- METABRIC_NEW %>%
+  mutate(receptor_subtype = case_when (
+    er_status_measured_by_ihc == "Negative" & pr_status == "Negative" & her2_status== "Negative" ~ "TNBC",
+    er_status_measured_by_ihc == "Negative" & pr_status == "Negative" & her2_status== "Positive" ~ "HER2+",
+    er_status_measured_by_ihc == "Positive" & her2_status == "Negative" & ki67_proliferation_index == "Low" ~ "LumA",
+    er_status_measured_by_ihc == "Positive" & her2_status == "Positive" ~ "LumB",
+    er_status_measured_by_ihc == "Positive" & her2_status == "Negative" & ki67_proliferation_index == "High" ~ "LumB",
+    TRUE ~ "NC"
+  ))
+
+
+METABRIC_NEW_GENES <- METABRIC_NEW_GENES %>%
+  mutate(receptor_subtype = case_when (
+    er_status_measured_by_ihc == "Negative" & pr_status == "Negative" & her2_status== "Negative" ~ "TNBC",
+    er_status_measured_by_ihc == "Negative" & pr_status == "Negative" & her2_status== "Positive" ~ "HER2+",
+    er_status_measured_by_ihc == "Positive" & her2_status == "Negative" & ki67_proliferation_index == "Low" ~ "LumA",
+    er_status_measured_by_ihc == "Positive" & her2_status== "Positive" ~ "LumB",
+    er_status_measured_by_ihc == "Positive" & her2_status == "Negative" & ki67_proliferation_index == "High" ~ "LumB",
+    TRUE ~ "NC"
+  ))
+```
+
+Moving the new two variables after the other clinical ones
+
+```{r}
+METABRIC_NEW <- METABRIC_NEW[,c(1:34, 208:209,35:207)]
+METABRIC_NEW_GENES <- METABRIC_NEW_GENES[,c(1:34, 20811:20812,35:20810)]
+```
+
+Deleting patients based on NA and "Died of Other Causes" value 
+
+```{r}
+METABRIC_SUBSET <- METABRIC_NEW %>%
+  filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
+         pam50_._claudin.low_subtype!="NC",
+         er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
+         !is.na(tumor_size), !is.na(neoplasm_histologic_grade))
+
+METABRIC_SUBSET_GENES <- METABRIC_NEW_GENES %>%
+  filter(death_from_cancer!="Died of Other Causes", death_from_cancer!="", 
+         pam50_._claudin.low_subtype!="NC",
+         er_status_measured_by_ihc!="", cellularity!="", !is.na(mutation_count), 
+         !is.na(tumor_size), !is.na(neoplasm_histologic_grade))
+```
+
+Converting age_at_diagnosis in a numeric variable
+
+```{r}
+METABRIC_SUBSET$age_at_diagnosis=as.integer(METABRIC_SUBSET$age_at_diagnosis)
+METABRIC_SUBSET_GENES$age_at_diagnosis=as.integer(METABRIC_SUBSET_GENES$age_at_diagnosis)
+```
+
+Rename the column "overall_survival_months" to "overall_survival_years"
+and convert the survival time from months to year, to make the data easier to interpret and compare.
+The same is performed for the RFS columns
+
+```{r}
+colnames(METABRIC_SUBSET)[colnames(METABRIC_SUBSET) == "overall_survival_months"] <- "overall_survival_years"
+METABRIC_SUBSET$overall_survival_years <- METABRIC_SUBSET$overall_survival_years / 12
+
+colnames(METABRIC_SUBSET_GENES)[colnames(METABRIC_SUBSET_GENES) == "overall_survival_months"] <- "overall_survival_years"
+METABRIC_SUBSET_GENES$overall_survival_years <- METABRIC_SUBSET_GENES$overall_survival_years / 12
+
+colnames(METABRIC_SUBSET)[colnames(METABRIC_SUBSET) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_SUBSET$RFS_years <- METABRIC_SUBSET$RFS_years / 12
+
+colnames(METABRIC_SUBSET_GENES)[colnames(METABRIC_SUBSET_GENES) == "RFS_MONTHS"] <- "RFS_years"
+METABRIC_SUBSET_GENES$RFS_years <- METABRIC_SUBSET_GENES$RFS_years / 12
+```
+
+Creation of tumor_size_stage column
+
+```{r}
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(tumor_size_stage = case_when (
+     tumor_size <= 20 ~ "T1",
+     tumor_size > 20 & tumor_size <= 50 ~ "T2",
+     tumor_size > 50 ~ "T3"
+  ))
+METABRIC_SUBSET$tumor_size_stage <- factor(METABRIC_SUBSET$tumor_size_stage, level= c("T1", "T2", "T3"))
+
+```
+
+Creation of pos_lymph_nodes_stage column
+
+```{r}
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(pos_lymph_nodes_stage = case_when (
+    lymph_nodes_examined_positive == 0 ~ "pN0",
+    lymph_nodes_examined_positive > 0 & lymph_nodes_examined_positive <= 3 ~ "pN1",
+    lymph_nodes_examined_positive > 3 & lymph_nodes_examined_positive <= 9 ~ "pN2",
+    lymph_nodes_examined_positive > 9 ~ "pN3"
+  ))
+
+METABRIC_SUBSET$pos_lymph_nodes_stage <- factor(METABRIC_SUBSET$pos_lymph_nodes_stage, 
+                                                level= c("pN0", "pN1", "pN2", "pN3"))
+```
+
+Creation of NPI_stage column
+
+```{r}
+METABRIC_SUBSET <- METABRIC_SUBSET %>%
+  mutate(NPI_stage = case_when (
+    nottingham_prognostic_index > 5.4 ~ "Poor",
+    nottingham_prognostic_index > 3.4 & lymph_nodes_examined_positive <= 5.4 ~ "Moderate",
+    nottingham_prognostic_index > 2.4 & lymph_nodes_examined_positive <= 3.4 ~ "Good",
+    nottingham_prognostic_index <= 2.4 ~ "Excellent"
+  ))
+
+METABRIC_SUBSET$NPI_stage <- factor(METABRIC_SUBSET$NPI_stage, 
+                                                level= c("Poor", "Moderate", "Good", "Excellent"))
+```
+
+Transformation of columns related to mutations in some genes
+
+```{r}
+METABRIC_SUBSET$tp53_mut <- as.factor(ifelse(METABRIC_SUBSET$tp53_mut=='0', 0, 1)) 
+METABRIC_SUBSET$brca1_mut <- as.factor(ifelse(METABRIC_SUBSET$brca1_mut=='0', 0, 1)) 
+METABRIC_SUBSET$brca2_mut <- as.factor(ifelse(METABRIC_SUBSET$brca2_mut=='0', 0, 1)) 
+METABRIC_SUBSET$pten_mut <- as.factor(ifelse(METABRIC_SUBSET$pten_mut=='0', 0, 1)) 
+METABRIC_SUBSET$pik3ca_mut <- as.factor(ifelse(METABRIC_SUBSET$pik3ca_mut=='0', 0, 1)) 
+METABRIC_SUBSET$cdh1_mut <- as.factor(ifelse(METABRIC_SUBSET$cdh1_mut=='0', 0, 1)) 
+METABRIC_SUBSET$akt1_mut <- as.factor(ifelse(METABRIC_SUBSET$akt1_mut=='0', 0, 1)) 
+METABRIC_SUBSET$akt2_mut <- as.factor(ifelse(METABRIC_SUBSET$akt2_mut=='0', 0, 1)) 
+
+METABRIC_SUBSET$brca_mut <- as.factor(ifelse(METABRIC_SUBSET$brca1_mut == 1 | METABRIC_SUBSET$brca2_mut==1, 1, 0))
+METABRIC_SUBSET$akt_mut <- as.factor(ifelse(METABRIC_SUBSET$akt1_mut == 1 | METABRIC_SUBSET$akt2_mut==1, 1, 0))
+
+```
+
+Rearrange the important columns
+
+```{r}
+METABRIC_SUBSET <- METABRIC_SUBSET[,c(1:36, 210:212, 37:38, 213:214, 39:209)]
+METABRIC_SUBSET <- METABRIC_SUBSET[,c(1:43, 52, 73, 44:51, 53:72, 74:214)]
+```
+
+Optional: save the new dataframe
+
+```{r}
+write.csv(METABRIC_SUBSET, file = "METABRIC_SUBSET.csv", row.names = FALSE)
+```
+
+
+
+
+

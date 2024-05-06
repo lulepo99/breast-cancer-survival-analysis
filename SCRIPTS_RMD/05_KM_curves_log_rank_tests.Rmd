@@ -1,0 +1,210 @@
+---
+title: "05_KM_curves_log_rank_tests"
+author: "Trio"
+date: "2024-05-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(survival)
+library(survminer)
+library(dplyr)
+```
+
+```{r}
+METABRIC_SUBSET$RFS_STATUS <- as.numeric(METABRIC_SUBSET$RFS_STATUS)
+```
+
+KM curve based on receptor subtype and overall survival (p= 9e-14). From the curve, we can see
+lower survival rates for HER2+ and LumB. This observation aligns with the absence of Trastuzumab 
+in the therapeutic regimens for patients testing positive for HER2
+
+```{r}
+fit_KM_by_receptor <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                                receptor_subtype, data= METABRIC_SUBSET,
+                              subset = receptor_subtype %in% c("HER2+", "LumA", "LumB", "TNBC"))
+ggsurvplot(fit_KM_by_receptor, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_receptor <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                           receptor_subtype, data= METABRIC_SUBSET,
+                         subset =  receptor_subtype %in% c("HER2+", "LumA", "LumB", "TNBC"))
+fit_log_rank_receptor 
+```
+KM curve based on receptor subtype and RFS (p= 1e-08). The pattern is very similar
+to the previous one
+
+
+```{r}
+fit_KM_by_RFS_receptor <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                                receptor_subtype, data= METABRIC_SUBSET,
+                              subset = receptor_subtype %in% c("HER2+", "LumA", "LumB", "TNBC"))
+
+ggsurvplot(fit_KM_by_RFS_receptor, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_RFS_receptor <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                           receptor_subtype, data= METABRIC_SUBSET,
+                         subset =  receptor_subtype %in% c("HER2+", "LumA", "LumB", "TNBC"))
+
+fit_log_rank_RFS_receptor
+```
+
+KM curve based on neoplasm histologic grade and overall survival (p= 8e-10). 
+The test is performed considering all the patients. This difference is surely related to
+the distribution of the grades among the receptor subtypes (see the chi-squared test previously performed)
+
+```{r}
+fit_KM_by_grade <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                                    neoplasm_histologic_grade, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_grade, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+
+fit_log_rank_grade <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                        neoplasm_histologic_grade, data= METABRIC_SUBSET)
+
+fit_log_rank_grade
+```
+
+KM curve based on neoplasm histologic grade and RFS (p= 2e-06). The pattern is very similar
+to the previous one
+
+```{r}
+fit_KM_by_RFS_grade <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                             neoplasm_histologic_grade, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_RFS_grade, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_RFS_grade <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                 neoplasm_histologic_grade, data= METABRIC_SUBSET)
+fit_log_rank_RFS_grade
+```
+
+The same tests were performed also for cellularity, but in that case we do not have 
+evidence to reject H0
+
+Laterality is non significant, as we already know from the previous from semester.
+Same destiny for the histological subtypes (we never assessed them, so I tried just to be sure)
+
+
+
+
+Despite the number of NA, I also tried for tumor stage, considering its importance
+from a prognostic point of view. We have 975 patients out of 1285 with an available tumor stage
+(1 = 320, 2 = 559, 3= 88, 4 = 8). We can ask to Alessia or Cappozzo if we can proceed
+but I don't think there will be any problems (maybe if we want to introduce itin the Cox model). 
+
+KM curve based on tumor stage and overall survival (p= <2e-16). It was clearly expected this result
+
+```{r}
+fit_KM_by_stage <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                             tumor_stage, data= METABRIC_SUBSET,
+                           subset = tumor_stage %in% c("1", "2", "3", "4"))
+ggsurvplot(fit_KM_by_stage, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_stage <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                 tumor_stage, data= METABRIC_SUBSET,
+                               subset = tumor_stage %in% c("1", "2", "3", "4"))
+fit_log_rank_stage
+```
+KM curve based on tumor stage and RFS (p= <2e-16)
+
+```{r}
+fit_KM_by_RFS_stage <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                             tumor_stage, data= METABRIC_SUBSET,
+                           subset = tumor_stage %in% c("1", "2", "3", "4"))
+ggsurvplot(fit_KM_by_RFS_stage, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_RFS_stage <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                 tumor_stage, data= METABRIC_SUBSET,
+                               subset = tumor_stage %in% c("1", "2", "3", "4"))
+fit_log_rank_RFS_stage
+
+```
+
+Considering the results obtained regarding tumor stage, we can surely stratify 
+within tumor size and pos lymph nodes. Besides, we can also evaluate a KM curve based on NPI
+
+
+KM curve based on tumor size and overall survival (p= <2e-16)
+```{r}
+fit_KM_by_size <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                             tumor_size_stage, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_size, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_size <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                tumor_size_stage, data= METABRIC_SUBSET)
+fit_log_rank_size
+```
+KM curve based on tumor size and RFS (p= 1e-13)
+
+```{r}
+fit_KM_by_RFS_size <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                            tumor_size_stage, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_RFS_size, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_RFS_size <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                    tumor_size_stage, data= METABRIC_SUBSET)
+fit_log_rank_RFS_size
+```
+KM curve based on pos lymph nodes and overall survival (p= <2e-16)
+
+```{r}
+fit_KM_by_pos_nodes <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                            pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_pos_nodes, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_pos_nodes <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                     pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+fit_log_rank_pos_nodes
+```
+
+KM curve based on pos lymph nodes and RFS (p= <2e-16)
+
+```{r}
+fit_KM_by_RFS_pos_nodes <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                                 pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_RFS_pos_nodes, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_RFS_pos_nodes <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                         pos_lymph_nodes_stage, data= METABRIC_SUBSET)
+fit_log_rank_RFS_pos_nodes
+```
+
+KM curve based on surgery treatment and overall survival (p= 6e-11). The pattern aligns with the clinical insights: mastectomy is performed on patients with more spread and aggressive breast cancer (lower probability to survive). Is it worth enough to put in the final work? We will see it
+
+```{r}
+fit_KM_by_surgery <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                                type_of_breast_surgery, data= METABRIC_SUBSET,
+                             subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+ggsurvplot(fit_KM_by_surgery, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_surgery <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                                   type_of_breast_surgery, data= METABRIC_SUBSET,
+                                 subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+fit_log_rank_surgery
+```
+KM curve based on surgery treatment and RFS (p= 4e-08)
+
+```{r}
+fit_KM_by_RFS_surgery <- survfit(Surv(RFS_years, RFS_STATUS) ~ 
+                               type_of_breast_surgery, data= METABRIC_SUBSET,
+                             subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+ggsurvplot(fit_KM_by_RFS_surgery, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_RFS_surgery <- survdiff(Surv(RFS_years, RFS_STATUS) ~ 
+                                       type_of_breast_surgery, data= METABRIC_SUBSET,
+                                     subset = type_of_breast_surgery %in% c("MASTECTOMY", "BREAST CONSERVING"))
+fit_log_rank_RFS_surgery
+```
+KM curve based on NPI categorized and overall survival (p= <2e-16)
+
+```{r}
+fit_KM_by_NPI <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                               NPI_stage, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_NPI, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_NPI <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                               NPI_stage, data= METABRIC_SUBSET)
+fit_log_rank_NPI
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,214 @@
+---
+title: "03_prelim_tests"
+author: "Trio"
+date: "2024-05-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(survival)
+library(survminer)
+```
+
+Test on gene expression levels
+
+```{r}
+p_val <- c()
+for (i in 37:20639) {
+  y <- wilcox.test(as.numeric(METABRIC_NEW_GENES[i][METABRIC_NEW_GENES$pam50_._claudin.low_subtype=='LumA',]), 
+                   as.numeric(METABRIC_NEW_GENES[i][METABRIC_NEW_GENES$pam50_._claudin.low_subtype=='LumB',]), 
+                   paired = FALSE)$p.value
+  names(y) <- colnames(METABRIC_NEW_GENES[i])
+  p_val <- c(p_val, y)
+}
+p_adj <- p.adjust(p_val, method = "bonferroni")
+DE_genes <- p_adj[p_adj<0.05]
+```
+
+
+```{r}
+chi.test <- chisq.test(METABRIC_SUBSET$overall_survival, METABRIC_SUBSET$RFS_STATUS)
+chi.test$observed
+chi.test$expected
+
+cor.test(METABRIC_SUBSET$overall_survival_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1 ], METABRIC_SUBSET$RFS_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1], method = "pearson")
+cor.test(METABRIC_SUBSET$overall_survival_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1 ], METABRIC_SUBSET$RFS_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1], method = "spearman")
+cor.test(METABRIC_SUBSET$overall_survival_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1 ], METABRIC_SUBSET$RFS_years[METABRIC_SUBSET$overall_survival==1 & METABRIC_SUBSET$RFS_STATUS==1], method = "kendall")
+
+```
+
+Frequency of remission among dead patients
+
+```{r}
+nrow(METABRIC_NEW[METABRIC_NEW$overall_survival==1 & METABRIC_NEW$RFS_STATUS==1,]) / nrow(METABRIC_NEW[METABRIC_NEW$overall_survival==1,])
+```
+
+Threshold for RFS_years = 10
+
+```{r}
+METABRIC_SUBSET_for_relapse <- METABRIC_SUBSET[!(METABRIC_SUBSET$overall_survival_years <= 10 & 
+                                                 METABRIC_SUBSET$overall_survival==0) & 
+                                                 METABRIC_SUBSET$RFS_years<=20,]
+table(METABRIC_SUBSET_for_relapse$overall_survival, METABRIC_SUBSET_for_relapse$RFS_STATUS)
+
+fisher.test <- fisher.test(METABRIC_SUBSET_for_relapse$overall_survival, 
+                       METABRIC_SUBSET_for_relapse$RFS_STATUS)
+fisher.test$p.value
+```
+Several hypothesis tests
+
+```{r}
+df_for_test <- METABRIC_SUBSET
+df_for_test$type_of_breast_surgery <- as.factor(df_for_test$type_of_breast_surgery)
+df_for_test$cancer_type_detailed <- as.factor(df_for_test$cancer_type_detailed)
+df_for_test$cellularity <- as.factor(df_for_test$cellularity)
+df_for_test$chemotherapy <- as.factor(df_for_test$chemotherapy)
+df_for_test$cohort <- as.factor(df_for_test$cohort)
+df_for_test$er_status_measured_by_ihc <- as.factor(df_for_test$er_status_measured_by_ihc)
+df_for_test$neoplasm_histologic_grade <- as.factor(df_for_test$neoplasm_histologic_grade)
+df_for_test$her2_status <- as.factor(df_for_test$her2_status)
+df_for_test$tumor_other_histologic_subtype <- as.factor(df_for_test$tumor_other_histologic_subtype)
+df_for_test$hormone_therapy <- as.factor(df_for_test$hormone_therapy)
+df_for_test$inferred_menopausal_state <- as.factor(df_for_test$inferred_menopausal_state)
+df_for_test$integrative_cluster <- as.factor(df_for_test$integrative_cluster)
+df_for_test$primary_tumor_laterality <- as.factor(df_for_test$primary_tumor_laterality)
+df_for_test$oncotree_code <- as.factor(df_for_test$oncotree_code)
+df_for_test$pr_status <- as.factor(df_for_test$pr_status)
+df_for_test$radio_therapy <- as.factor(df_for_test$radio_therapy)
+df_for_test$tumor_stage <- as.factor(df_for_test$tumor_stage)
+df_for_test$RFS_STATUS <- as.factor(df_for_test$RFS_STATUS)
+```
+
+Laterality --> Not significant
+
+```{r}
+df_for_test <- df_for_test[(df_for_test$primary_tumor_laterality != ''), ]
+chi.test_laterality <- chisq.test(df_for_test$overall_survival, df_for_test$primary_tumor_laterality)
+chi.test_laterality$observed
+chi.test_laterality$expected
+chi.test_laterality
+```
+
+Receptors --> Significant
+
+```{r}
+df_for_test <- df_for_test[(df_for_test$receptor_subtype != 'NC'), ]
+chi.test_receptors <- chisq.test(df_for_test$overall_survival, df_for_test$receptor_subtype)
+chi.test_receptors$observed
+chi.test_receptors$expected
+chi.test_receptors
+```
+
+Neoplasm histologic grade --> Significant
+
+```{r}
+df_for_test <- df_for_test[(df_for_test$neoplasm_histologic_grade != ''), ]
+chi.test_nhg <- chisq.test(df_for_test$overall_survival, df_for_test$neoplasm_histologic_grade)
+chi.test_nhg$observed
+chi.test_nhg$expected
+chi.test_nhg
+```
+
+Pre-post menopausal state --> Significant
+
+```{r}
+df_for_test <- df_for_test[(df_for_test$inferred_menopausal_state != ''), ]
+chi.test_ims <- chisq.test(df_for_test$overall_survival, df_for_test$inferred_menopausal_state)
+chi.test_ims$observed
+chi.test_ims$expected
+chi.test_ims
+```
+Cellularity --> Not significant
+
+```{r}
+df_for_test <- df_for_test[(df_for_test$cellularity != ''), ]
+chi.test_cellularity <- chisq.test(df_for_test$overall_survival, df_for_test$cellularity)
+chi.test_cellularity$observed
+chi.test_cellularity$expected
+chi.test_cellularity
+```
+
+NPI_stage --> Significant
+
+```{r}
+#cellularity
+df_for_test <- df_for_test[!is.na(df_for_test$NPI_stage), ]
+chi.test_NPI <- chisq.test(df_for_test$overall_survival, df_for_test$NPI_stage)
+chi.test_NPI$observed
+chi.test_NPI$expected
+chi.test_NPI
+```
+BRCA --> Not significant
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$brca_mut), ]
+chi.test_brca <- chisq.test(df_for_test$overall_survival, df_for_test$brca_mut)
+chi.test_brca$observed
+chi.test_brca$expected
+chi.test_brca
+```
+
+PIK3CA --> Not significant
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$pik3ca_mut), ]
+chi.test_pik3ca <- chisq.test(df_for_test$overall_survival, df_for_test$pik3ca_mut)
+chi.test_pik3ca$observed
+chi.test_pik3ca$expected
+chi.test_pik3ca
+```
+TP53 --> Significant
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$tp53_mut), ]
+chi.test_tp53 <- chisq.test(df_for_test$overall_survival, df_for_test$tp53_mut)
+chi.test_tp53$observed
+chi.test_tp53$expected
+chi.test_tp53
+```
+
+AKT (AKT1 + AKT2) --> Not significant
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$akt_mut), ]
+chi.test_akt <- chisq.test(df_for_test$overall_survival, df_for_test$akt_mut)
+chi.test_akt$observed
+chi.test_akt$expected
+chi.test_akt
+```
+PTEN --> Not significant
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$pten_mut), ]
+chi.test_pten <- chisq.test(df_for_test$overall_survival, df_for_test$pten_mut)
+chi.test_pten$observed
+chi.test_pten$expected
+chi.test_pten
+```
+
+CDH1 --> Not significant
+
+
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$cdh1_mut), ]
+chi.test_cdh1 <- chisq.test(df_for_test$overall_survival, df_for_test$cdh1_mut)
+chi.test_cdh1$observed
+chi.test_cdh1$expected
+chi.test_cdh1
+```
+
+```{r}
+rm(df_for_test)
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,55 @@
+---
+title: "06_PH_assumptions"
+author: "Trio"
+date: "2024-05-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(survival)
+library(survminer)
+library(ggplot2)
+library(tidyverse)
+```
+```{r}
+METABRIC_COX_SUBSET <- METABRIC_SUBSET[,-c(1,4,8,11,13,22,28,35,36)]
+METABRIC_COX_SUBSET <- METABRIC_COX_SUBSET[,c(1:36)]
+```
+
+Test if the single variables respect the PH assumptions
+
+```{r}
+
+list_cox_ph <- list( NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+                     NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+                     NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+
+
+for (i in 1:ncol(METABRIC_COX_SUBSET)) {
+  
+  if (i == 18 | i == 19) {
+    next
+  }
+  curr_dataset <- METABRIC_COX_SUBSET[,c(18,19,i)]
+  print(i)
+  curr_model <- coxph(Surv(overall_survival_years, overall_survival) ~ .,
+                      data = curr_dataset)
+  ph_table <- cox.zph(curr_model)
+  list_cox_ph[[i]] <- ph_table
+  
+}
+
+list_cox_ph
+```
+
+
+
+
+
+
+
