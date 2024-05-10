@@ -209,7 +209,7 @@ fit_log_rank_brca <- survdiff(Surv(overall_survival_years, overall_survival) ~
                                brca_mut, data= METABRIC_SUBSET)
 fit_log_rank_brca
 ```
-KM curve based on tp53_mut and overal survival (p= 1e-08)
+KM curve based on tp53_mut and overall survival (p= 1e-08)
 
 ```{r}
 fit_KM_by_tp53 <- survfit(Surv(overall_survival_years, overall_survival) ~ 
