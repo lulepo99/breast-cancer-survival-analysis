@@ -59,21 +59,35 @@ cox2$cdh1_mut <- as.factor(cox2$cdh1_mut)
 In all the following steps I remove the variables causing warnings
 
 ```{r}
+coxph(Surv(overall_survival_years, overall_survival) ~ cancer_type_detailed, 
+           data = cox2)     #not significant, we can easily remove it
+coxph(Surv(overall_survival_years, overall_survival) ~ RFS_STATUS, 
+           data = cox2)   #significant, but still we remove it to avoid warning
+
 cox3 <- cox2[,-c(3,26)]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox3)
 summary(a)
 
+
+coxph(Surv(overall_survival_years, overall_survival) ~ tumor_other_histologic_subtype, 
+           data = cox3)    #not significant
 cox4 <- cox3[,-9]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox4)
 summary(a)
 
+
+coxph(Surv(overall_survival_years, overall_survival) ~ cohort, 
+           data = cox4)   #not significant
 cox5 <- cox4[,-5]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox5)
 summary(a)
 
+
+coxph(Surv(overall_survival_years, overall_survival) ~ oncotree_code, 
+           data = cox5)   #not significant
 cox6 <- cox5[,-14]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox6)
@@ -83,6 +97,10 @@ summary(a)
 Finally this model doesn't cause any warnings
 
 ```{r}
+coxph(Surv(overall_survival_years, overall_survival) ~ mutation_count, 
+           data = cox6)    #not significant
+coxph(Surv(overall_survival_years, overall_survival) ~ TMB_NONSYNONYMOUS, 
+           data = cox6)    #not significant
 cox7 <- cox6[,-c(13,20)]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox7)
