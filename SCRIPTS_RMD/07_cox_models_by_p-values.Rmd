@@ -16,6 +16,42 @@ library(survminer)
 library(ggplot2)
 library(tidyverse)
 ```
+Test univariati
+```{r}
+
+# Definisci la variabile di sopravvivenza e la matrice delle covariate
+SurvObj <- Surv(cox3$overall_survival_years, cox3$overall_survival)
+covariates <- colnames(cox3)[!colnames(cox3) %in% c("survival_time", "status")]
+
+# Inizializza una lista per salvare i modelli e i p-value associati
+models <- list()
+p_values <- list()
+
+# Loop per creare i modelli con una sola variabile
+for (covariate in covariates) {
+  # Crea il modello di Cox
+  cox_model <- coxph(formula = as.formula(paste("SurvObj ~", covariate)), data = cox3)
+  
+  # Salva il modello
+  models[[covariate]] <- cox_model
+  
+  # Estrai il p-value
+  p_value <- summary(cox_model)$logtest["pvalue"]
+  
+  # Salva il p-value
+  p_values[[covariate]] <- p_value
+}
+
+test <- p.adjust(p_values, method = "BH")
+p_significant <- ifelse(test <= 0.05, test, NA)
+significant_variables <- p_significant[!is.na(p_significant)]
+significant_variables_nomi <- names(significant_variables)
+METABRIC_COX_SUBSET_VERO <- cox2[,significant_variables_nomi]
+coxmodel1 <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+      data = METABRIC_COX_SUBSET_VERO)
+summary(coxmodel1)
+```
+The significant variables in univariate test are in p_significant
 
 
 ```{r}
