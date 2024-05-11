@@ -198,7 +198,7 @@ fit_log_rank_NPI <- survdiff(Surv(overall_survival_years, overall_survival) ~
 fit_log_rank_NPI
 ```
 
-KM curve based on brca_mut and overall survival (p= 0.06). Given our evidence, there is not enough data to reject H0. In fact, the number of observations with a mutation in the brca1 or brca2 gene is very low with respect to people without it. This is explained by the low frequence in the occurrence of germinal mutations.
+KM curve based on brca_mut and overall survival (p= 0.06). Given our evidence, there is not enough data to reject H0. In fact, the number of observations with a mutation in the brca1 or brca2 gene is very low with respect to people without it. This is explained by the low frequency in the occurrence of germinal mutations.
 
 ```{r}
 
