@@ -202,7 +202,7 @@ MANN-WHITNEY U TESTS
 Investigating differences in gene expressions among receptor subtypes, with LumA used as the reference due to its better prognostic outcomes according to literature findings.
 
 
-Differential gene expressions between LumA and LumB (9992 null hypotheses out of 20603 rejected)
+Differential gene expressions between LumA and LumB (9992 null hypotheses rejected out of 20603)
 
 ```{r}
 p_val <- c()
@@ -219,7 +219,7 @@ num_rejected <- length(DE_genes)
 print(num_rejected)
 ```
 
-Differential gene expressions between LumA and TNBC (12684 null hypotheses out of 20603 rejected)
+Differential gene expressions between LumA and TNBC (12684 null hypotheses rejected out of 20603)
 
 ```{r}
 p_val <- c()
@@ -236,7 +236,7 @@ num_rejected <- length(DE_genes)
 print(num_rejected)
 ```
 
-Differential gene expressions between LumA and HER2+ (10564 null hypotheses out of 20603 rejected)
+Differential gene expressions between LumA and HER2+ (10564 null hypotheses rejected out of 20603)
 
 ```{r}
 p_val <- c()
