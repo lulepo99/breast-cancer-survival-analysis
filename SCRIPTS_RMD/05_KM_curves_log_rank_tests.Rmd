@@ -219,7 +219,16 @@ fit_log_rank_tp53 <- survdiff(Surv(overall_survival_years, overall_survival) ~
                                tp53_mut, data= METABRIC_SUBSET)
 fit_log_rank_tp53
 ```
+KM curve based on cohort and overall survival (p= 5e-04). It is necessary to understand the meaning of the cohort variable
 
+```{r}
+fit_KM_by_cohort <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                               cohort, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_cohort, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_cohort <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                               cohort, data= METABRIC_SUBSET)
+fit_log_rank_cohort
+```
 
 
 
