@@ -94,6 +94,7 @@ a <- coxph(Surv(overall_survival_years, overall_survival) ~ .,
 summary(a)
 ```
 
+
 Finally this model doesn't cause any warnings
 
 ```{r}

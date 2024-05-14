@@ -32,7 +32,8 @@ plot(fit_glmnet)
 
 coef(fit_glmnet, s = 0.05)
 
-fit_cv.glmnet <- cv.glmnet(x, y, family = "cox", type.measure = 'C')
+fit_cv.glmnet <- cv.glmnet(x, y, family = "cox", type.measure = 'C',
+                           grouped = TRUE)
 best_lambda <- fit_cv.glmnet$lambda.min
 plot(fit_cv.glmnet)
 
