@@ -198,7 +198,7 @@ fit_log_rank_NPI <- survdiff(Surv(overall_survival_years, overall_survival) ~
 fit_log_rank_NPI
 ```
 
-KM curve based on brca_mut and overall survival (p= 0.06). Given our evidence, there is not enough data to reject H0. In fact, the number of observations with a mutation in the brca1 or brca2 gene is very low with respect to people without it. This is explained by the low frequence in the occurrence of germinal mutations.
+KM curve based on brca_mut and overall survival (p= 0.06). Given our evidence, there is not enough data to reject H0. In fact, the number of observations with a mutation in the brca1 or brca2 gene is very low with respect to people without it. This is explained by the low frequency in the occurrence of germinal mutations.
 
 ```{r}
 
@@ -219,7 +219,16 @@ fit_log_rank_tp53 <- survdiff(Surv(overall_survival_years, overall_survival) ~
                                tp53_mut, data= METABRIC_SUBSET)
 fit_log_rank_tp53
 ```
+KM curve based on cohort and overall survival (p= 5e-04). It is necessary to understand the meaning of the cohort variable
 
+```{r}
+fit_KM_by_cohort <- survfit(Surv(overall_survival_years, overall_survival) ~ 
+                               cohort, data= METABRIC_SUBSET)
+ggsurvplot(fit_KM_by_cohort, risk.table.col = "strata", surv.median.line = "hv", conf.int = FALSE) 
+fit_log_rank_cohort <- survdiff(Surv(overall_survival_years, overall_survival) ~ 
+                               cohort, data= METABRIC_SUBSET)
+fit_log_rank_cohort
+```
 
 
 
