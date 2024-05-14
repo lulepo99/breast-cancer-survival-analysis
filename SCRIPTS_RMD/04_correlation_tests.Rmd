@@ -46,17 +46,17 @@ cor.test(METABRIC_SUBSET$tumor_size[METABRIC_SUBSET$overall_survival==1], METABR
 
 ```
 Correlation between age_at_diagnosis and tumor_size in breast cancer deaths
-Result: weak positive correlation (rho= 0.083), but statistically significant (p-value = 0.045)
+Result: weak positive correlation (rho= 0.104), but statistically significant (p-value = 0.000194)
 
 ```{r}
 {plot
-(qqnorm(METABRIC_SUBSET$age_at_diagnosis[METABRIC_SUBSET$overall_survival==1]))
-qqline(METABRIC_SUBSET$age_at_diagnosis[METABRIC_SUBSET$overall_survival==1], col="red")
+(qqnorm(METABRIC_SUBSET$age_at_diagnosis))
+qqline(METABRIC_SUBSET$age_at_diagnosis, col="red")
 }
 
-hist(METABRIC_SUBSET$age_at_diagnosis[METABRIC_SUBSET$overall_survival==1], prob="TRUE", main="Hystogram of Age at diagnosis")
+hist(METABRIC_SUBSET$age_at_diagnosis, prob="TRUE", main="Hystogram of Age at diagnosis")
 
-cor.test(METABRIC_SUBSET$age_at_diagnosis[METABRIC_SUBSET$overall_survival==1], METABRIC_SUBSET$tumor_size[METABRIC_SUBSET$overall_survival==1], 
+cor.test(METABRIC_SUBSET$age_at_diagnosis, METABRIC_SUBSET$tumor_size, 
          method="spearman")
 
 ```
@@ -82,13 +82,6 @@ hist(METABRIC_SUBSET$RFS_years[METABRIC_SUBSET$overall_survival==1], prob="TRUE"
 cor.test(METABRIC_SUBSET$age_at_diagnosis[METABRIC_SUBSET$overall_survival==1], METABRIC_SUBSET$RFS_years[METABRIC_SUBSET$overall_survival==1], 
          method="spearman")
 ```
-Correlation between tumor size and pos lymph nodes in breast cancer deaths 
-weak positive correlation (rho = 0.267), but statistically significant (p-value = 7.742*10^-11)
-
-```{r}
-cor.test(METABRIC_SUBSET$tumor_size[METABRIC_SUBSET$overall_survival==1], METABRIC_SUBSET$lymph_nodes_examined_positive[METABRIC_SUBSET$overall_survival==1], 
-         method="spearman")
-```
 
 Correlation between tumor size and pos lymph nodes considering all the subset dataset
 weak positive correlation (rho = 0.34), but statistically significant (p-value < 2.2*10^-16).
@@ -108,7 +101,8 @@ Next step: transformation using logarithms etc to see if we are able to obtain s
 ---------------------------------------------------------------------------------------
 
 ASSOCIATION TESTS
-Association between the receptor subtypes and the histologic grade (p-value < 2.2e-16). All the subset patients are considered.
+
+Association between receptor subtypes and histologic grade (p-value < 2.2e-16). 
 
 ```{r}
 table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$neoplasm_histologic_grade[METABRIC_SUBSET$receptor_subtype!="NC"])
@@ -119,7 +113,7 @@ grade=table(METABRIC_SUBSET$neoplasm_histologic_grade[METABRIC_SUBSET$receptor_s
 
 barplot(grade, beside=TRUE, legend=c("Grade 1","Grade 2", "Grade 3"), args.legend=list(x="topleft"), main="Neoplasm Histologic Grade")
 ```
-Association between the receptor subtypes and cellularity (p-value = 10^-12). All the subset patients are considered.
+Association between receptor subtypes and cellularity (p-value = 10^-12). 
 
 ```{r}
 METABRIC_SUBSET$cellularity <- factor(METABRIC_SUBSET$cellularity, level=c("Low", "Moderate", "High"))
@@ -134,7 +128,7 @@ barplot(cellularity, beside=TRUE, legend=c("Low", "Moderate", "High"), args.lege
 
 
 ```
-Association between the receptor subtypes and surgery treatment (p-value = 0.0005246)
+Association between receptor subtypes and surgery treatment (p-value = 0.0005246).
 
 ```{r}
 table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""], METABRIC_SUBSET$type_of_breast_surgery[METABRIC_SUBSET$receptor_subtype!="NC" & METABRIC_SUBSET$type_of_breast_surgery!=""])
@@ -145,5 +139,117 @@ surgery=table(METABRIC_SUBSET$type_of_breast_surgery[METABRIC_SUBSET$receptor_su
 
 barplot(surgery, beside=TRUE, legend=c("Breast Conserving", "Mastectomy"), args.legend=list(x="topleft"), main="Surgery Treatment")
 ```
+Association between receptor subtypes and tumor size stage (p-value = 1.286e-07).
 
+```{r}
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$tumor_size_stage[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$tumor_size_stage[METABRIC_SUBSET$receptor_subtype!="NC"], correct=FALSE)
+
+tumor_size=table(METABRIC_SUBSET$tumor_size_stage[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+barplot(tumor_size, beside=TRUE, legend=c("T1", "T2", "T3"), args.legend=list(x="topleft"), main="Tumor size")
+```
+Association between receptor subtypes and number of positive lymph nodes (p-value = 2.464e-05).
+
+```{r}
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$pos_lymph_nodes_stage[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$pos_lymph_nodes_stage[METABRIC_SUBSET$receptor_subtype!="NC"], correct=FALSE)
+
+pos_lymph_nodes=table(METABRIC_SUBSET$pos_lymph_nodes_stage[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+barplot(pos_lymph_nodes, beside=TRUE, legend=c("pN0", "pN1", "pN2", "pN3"), args.legend=list(x="topleft"), main="Number of Positive Lymph Nodes")
+```
+Association between receptor subtypes and brca1/brca2 mutation (p-value = 0.0005351).
+
+```{r}
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$brca_mut[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$brca_mut[METABRIC_SUBSET$receptor_subtype!="NC"], correct=FALSE)
+
+brca_mutation=table(METABRIC_SUBSET$brca_mut[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+barplot(brca_mutation, beside=TRUE, legend=c("Absent", "Present"), args.legend=list(x="topleft"), main="BRCA1 or BRCA2 mutation")
+```
+Association between repector subtypes and tp53 mutation (p-value < 2.2e-16). The mutation frequency is higher in the TNBC subtype than the other subtypes. This is in accordance with literature findings.
+
+```{r}
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$tp53_mut[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$tp53_mut[METABRIC_SUBSET$receptor_subtype!="NC"], correct=FALSE)
+
+tp53_mutation=table(METABRIC_SUBSET$tp53_mut[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+barplot(tp53_mutation, beside=TRUE, legend=c("Absent", "Present"), args.legend=list(x="topleft"), main="TP53 mutation")
+```
+Association between receptor subtypes and NPI (p-value < 2.2e-16).
+
+```{r}
+table(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$NPI_stage[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+chisq.test(METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$NPI_stage[METABRIC_SUBSET$receptor_subtype!="NC"], correct=FALSE)
+
+NPI=table(METABRIC_SUBSET$NPI_stage[METABRIC_SUBSET$receptor_subtype!="NC"], METABRIC_SUBSET$receptor_subtype[METABRIC_SUBSET$receptor_subtype!="NC"])
+
+barplot(NPI, beside=TRUE, legend=c("Poor", "Moderate", "Good", "Excellent"), args.legend=list(x="topleft"), main="Nottingham Prognostic Index")
+```
+
+---------------------------------------------------------------------------------------
+
+MANN-WHITNEY U TESTS
+
+Investigating differences in gene expressions among receptor subtypes, with LumA used as the reference due to its better prognostic outcomes according to literature findings.
+
+
+Differential gene expressions between LumA and LumB (9992 null hypotheses rejected out of 20603)
+
+```{r}
+p_val <- c()
+for (i in 37:20639) {
+  y <- wilcox.test(as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='LumA',]), 
+                   as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='LumB',]), 
+                   paired = FALSE)$p.value
+  names(y) <- colnames(METABRIC_SUBSET_GENES[i])
+  p_val <- c(p_val, y)
+}
+p_adj <- p.adjust(p_val, method = "BH")
+DE_genes <- p_adj[p_adj<0.05]
+num_rejected <- length(DE_genes)
+print(num_rejected)
+```
+
+Differential gene expressions between LumA and TNBC (12684 null hypotheses rejected out of 20603)
+
+```{r}
+p_val <- c()
+for (i in 37:20639) {
+  y <- wilcox.test(as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='LumA',]), 
+                   as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='TNBC',]), 
+                   paired = FALSE)$p.value
+  names(y) <- colnames(METABRIC_SUBSET_GENES[i])
+  p_val <- c(p_val, y)
+}
+p_adj <- p.adjust(p_val, method = "BH")
+DE_genes <- p_adj[p_adj<0.05]
+num_rejected <- length(DE_genes)
+print(num_rejected)
+```
+
+Differential gene expressions between LumA and HER2+ (10564 null hypotheses rejected out of 20603)
+
+```{r}
+p_val <- c()
+for (i in 37:20639) {
+  y <- wilcox.test(as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='LumA',]), 
+                   as.numeric(METABRIC_SUBSET_GENES[i][METABRIC_SUBSET_GENES$receptor_subtype=='HER2+',]), 
+                   paired = FALSE)$p.value
+  names(y) <- colnames(METABRIC_SUBSET_GENES[i])
+  p_val <- c(p_val, y)
+}
+p_adj <- p.adjust(p_val, method = "BH")
+DE_genes <- p_adj[p_adj<0.05]
+num_rejected <- length(DE_genes)
+print(num_rejected)
+```
 
