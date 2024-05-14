@@ -16,49 +16,15 @@ library(survminer)
 library(ggplot2)
 library(tidyverse)
 ```
-Test univariati
-```{r}
 
-SurvObj <- Surv(cox3$overall_survival_years, cox3$overall_survival)
-covariates <- colnames(cox3)[!colnames(cox3) %in% c("survival_time", "status")]
-
-models <- list()
-p_values <- list()
-
-for (covariate in covariates) {
-  cox_model <- coxph(formula = as.formula(paste("SurvObj ~", covariate)), data = cox3)
-  
-  models[[covariate]] <- cox_model
-  
-  p_value <- summary(cox_model)$logtest["pvalue"]
-  
-  p_values[[covariate]] <- p_value
-}
-
-test <- p.adjust(p_values, method = "BH")
-p_significant <- ifelse(test <= 0.05, test, NA)
-significant_variables <- p_significant[!is.na(p_significant)]
-significant_variables_nomi <- names(significant_variables)
-METABRIC_COX_SUBSET_VERO <- cox2[,significant_variables_nomi]
-coxmodel1 <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-      data = METABRIC_COX_SUBSET_VERO)
-summary(coxmodel1)
-```
-The significant variables in univariate test are in p_significant
-
-
+Preparation of dataset for cox model
 ```{r}
 #Remove the variable death from cancer
 cox2 <- METABRIC_COX_SUBSET[,-24]
 
-a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-      data = cox2)
-summary(a)
-```
+cox2 <- cox2[cox2$primary_tumor_laterality!=""
+                                                   & cox2$type_of_breast_surgery!="",]
 
-Transformation in factors
-
-```{r}
 cox2$type_of_breast_surgery <- as.factor(cox2$type_of_breast_surgery)
 cox2$cancer_type_detailed <- as.factor(cox2$cancer_type_detailed)
 cox2$cellularity <- as.factor(cox2$cellularity)
@@ -83,7 +49,24 @@ cox2$brca_mut <- as.factor(cox2$brca_mut)
 cox2$akt_mut <- as.factor(cox2$akt_mut)
 cox2$pten_mut <- as.factor(cox2$pten_mut)
 cox2$cdh1_mut <- as.factor(cox2$cdh1_mut)
+
+cox2_junior <- cox2
+
+cox2_junior$NPI_stage <- factor(cox2_junior$NPI_stage, levels = c("Excellent", "Good", "Moderate", "Poor"))
+cox2_junior$NPI_stage <- relevel(cox2_junior$NPI_stage, ref = "Excellent")
+
+
 ```
+
+
+
+
+```{r}
+a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+      data = cox2)
+summary(a)
+```
+
 
 In all the following steps I remove the variables causing warnings
 
@@ -149,8 +132,49 @@ cox.zph(b)
 ```
 
 
+Univariats tests
+```{r}
+
+SurvObj <- Surv(cox2_junior$overall_survival_years, cox2_junior$overall_survival)
+covariates <- colnames(cox2_junior)[!colnames(cox2_junior) %in% c("survival_time", "status")]
+
+models <- list()
+p_values <- list()
+p_all <- list()
+
+for (covariate in covariates) {
+  cox_model <- coxph(formula = as.formula(paste("SurvObj ~", covariate)), data = cox2_junior)
+  
+  models[[covariate]] <- cox_model
+  
+  p_value <- summary(cox_model)$logtest["pvalue"]
+  
+  p_values[[covariate]] <- p_value
+  
+  p_all[[covariate]] <- summary(cox_model)$coefficients[, "Pr(>|z|)"]
+  
+}
+
+#test su loglikelihood p
+test <- p.adjust(p_values, method = "BH")
+p_significant <- ifelse(test <= 0.05, test, NA)
+significant_variables <- p_significant[!is.na(p_significant)]
+  
+significant_variables_nomi <- names(significant_variables)
+significant_variables <- significant_variables[significant_variables_nomi!= "RFS_STATUS" & significant_variables_nomi!= "RFS_years" & significant_variables_nomi!= "overall_survival_years" & significant_variables_nomi!= "overall_survival"]
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
+#rifare qui test multipli su p_all e da qui tenere le prime 20 come sotto (ma i primi 20 livelli, non variaili, forse conviene accorpare alcuni fattori), poi fare il cox con il dataset piccolo
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
 
 
+top20 <- sort(significant_variables_all)[1:20]
 
+METABRIC_COX_SUBSET_VERO <- cox2_junior[,significant_variables_nomi]
+coxmodel1 <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
+      data = METABRIC_COX_SUBSET_VERO)
+summary(coxmodel1)
+```
+The significant variables in univariate test are in p_significant
 
 
