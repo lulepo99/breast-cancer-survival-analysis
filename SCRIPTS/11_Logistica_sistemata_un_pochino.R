@@ -53,6 +53,24 @@ METABRIC_SUBSET_relapse$tumor_size_stage <- as.character(METABRIC_SUBSET_relapse
 METABRIC_SUBSET_relapse$tumor_size_stage[METABRIC_SUBSET_relapse$tumor_size_stage %in% c("T2", "T3")] <- "T2_T3"
 METABRIC_SUBSET_relapse$tumor_size_stage <- factor(METABRIC_SUBSET_relapse$tumor_size_stage, levels = c("T1", "T2_T3"))
 
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade <- as.character(METABRIC_SUBSET_relapse$neoplasm_histologic_grade)
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade[METABRIC_SUBSET_relapse$neoplasm_histologic_grade %in% c("1", "2")] <- "1_2"
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade <- factor(METABRIC_SUBSET_relapse$neoplasm_histologic_grade, levels = c("1_2", "3"))
+
+METABRIC_SUBSET_relapse$ER_PR_combined <- interaction(METABRIC_SUBSET_relapse$er_status_measured_by_ihc, METABRIC_SUBSET_relapse$pr_status, sep = "_")
+METABRIC_SUBSET_relapse$ER_PR_combined <- ifelse(
+  METABRIC_SUBSET_relapse$ER_PR_combined %in% c("Positive_Negative", "Negative_Positive"), 
+  "Mixed", 
+  as.character(METABRIC_SUBSET_relapse$ER_PR_combined)
+)
+
+METABRIC_SUBSET_relapse$ER_PR_combined <- as.factor(METABRIC_SUBSET_relapse$ER_PR_combined)
+METABRIC_SUBSET_relapse$ER_PR_combined <- relevel(METABRIC_SUBSET_relapse$ER_PR_combined, ref = "Negative_Negative")
+
+
+
+
+
 
 covariates <- colnames(METABRIC_SUBSET_relapse)[!colnames(METABRIC_SUBSET_relapse) %in% c("relapse_within_5yr")]
 models <- list()
@@ -88,7 +106,7 @@ METABRIC_SUBSET_new_relapse <- METABRIC_SUBSET_relapse[, selected_variables, dro
 
 
 # Riproducibility seed 
-set.seed(123)
+set.seed(789)
 
 # Index for the training and test groups
 train_index <- createDataPartition(METABRIC_SUBSET_new_relapse$relapse_within_5yr, p = 0.8, list = FALSE, times = 1)
@@ -97,16 +115,21 @@ train_index <- createDataPartition(METABRIC_SUBSET_new_relapse$relapse_within_5y
 train_set <- METABRIC_SUBSET_new_relapse[train_index, ]
 test_set <- METABRIC_SUBSET_new_relapse[-train_index, ]
 
+
+
 # Costruire il modello di regressione logistica su train_set solo come prova per valutare co-linearità
-glm_model <- glm(relapse_within_5yr ~ . , family = binomial(link = logit), data = train_set)
+# Avendo creato la variabile che combina ER e PR senza rimuovere le due variabili singole dà errore (è normale).
+# Runnatelo dopo la seguente rimozione delle variabili
+#glm_model <- glm(relapse_within_5yr ~ . , family = binomial(link = logit), data = train_set)
 
 # Calcolare il VIF
-print(vif(glm_model))
+
+#print(vif(glm_model))
 
 
 # Dato che ci sono variabili collineari, le rimuovo.
-train_set <- train_set[,-c(3,8,9,11,14)]
-test_set <- test_set[,-c(3,8,9,11,14)]
+train_set <- train_set[,-c(3,5,9,10,11,12,15)]
+test_set <- test_set[,-c(3,5,9,10,11,12,15)]
 
 
 
@@ -173,4 +196,6 @@ cat("AUC sul test set:", auc_test, "\n")
 plot(roc_curve_test, main = "ROC Curve for Lasso Logistic Regression on Test Set")
 abline(0, 1, col = "red", lwd = 2, lty = 2)
 coords(roc_curve_test, x="best", transpose = TRUE)
+
+
 
