@@ -105,8 +105,8 @@ print(vif(glm_model))
 
 
 # Dato che ci sono variabili collineari, le rimuovo.
-train_set <- train_set[,-c(2,10,3,6,8,9,11,14)]
-test_set <- test_set[,-c(2,10,3,6,8,9,11,14)]
+train_set <- train_set[,-c(3,8,9,11,14)]
+test_set <- test_set[,-c(3,8,9,11,14)]
 
 
 
