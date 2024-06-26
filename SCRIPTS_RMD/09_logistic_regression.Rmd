@@ -1,0 +1,284 @@
+---
+title: "Logistic Regression"
+author: "Elena Sasso, Luca Lepore, Marco Cominelli"
+date: "2024-06-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(pROC)
+library(caret)
+library(glmnet)
+library(car)
+```
+
+Dataset preparation 
+
+```{r}
+# Creation of the variable "relapse_within_5yr"
+METABRIC_SUBSET$relapse_within_5yr <- with(METABRIC_SUBSET, ifelse(overall_survival_years <= 5 & overall_survival == 1, 1, ifelse(overall_survival_years > 5, 0, NA)))
+
+# Creation of the relapse dataframe and removal of patients with RFS status = 0 and RFS years < 5 years
+METABRIC_SUBSET_relapse <- METABRIC_SUBSET[,c(1:39, 215, 40:214)]
+
+# Make dichotomous the gene mutations values
+for(i in 47:215) {
+  METABRIC_SUBSET_relapse[[i]] <- ifelse(METABRIC_SUBSET_relapse[[i]] != "0", "1", "0")
+}
+
+# Removal of the non meaningful variables
+METABRIC_SUBSET_relapse <- METABRIC_SUBSET_relapse[,-c(1,4,5,9,11,13,15,24,25,28,30,31,33,34,35,36)]
+
+# Removal of NA values
+METABRIC_SUBSET_relapse <- METABRIC_SUBSET_relapse[!is.na(METABRIC_SUBSET$relapse_within_5yr) & METABRIC_SUBSET$primary_tumor_laterality!="" & METABRIC_SUBSET$type_of_breast_surgery!="",]
+METABRIC_SUBSET_relapse <- na.omit(METABRIC_SUBSET_relapse)
+
+```
+
+
+Make as factor our variables and merge some categories in some of them
+
+```{r}
+METABRIC_SUBSET_relapse$cellularity <- factor(METABRIC_SUBSET_relapse$cellularity, levels = c("Low", "Moderate", "High"))
+METABRIC_SUBSET_relapse$type_of_breast_surgery <- as.factor(METABRIC_SUBSET_relapse$type_of_breast_surgery)
+METABRIC_SUBSET_relapse$chemotherapy <- as.factor(METABRIC_SUBSET_relapse$chemotherapy)
+METABRIC_SUBSET_relapse$er_status_measured_by_ihc <- as.factor(METABRIC_SUBSET_relapse$er_status_measured_by_ihc)
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade <- factor(METABRIC_SUBSET_relapse$neoplasm_histologic_grade, levels = c("1", "2", "3"))
+METABRIC_SUBSET_relapse$her2_status <- as.factor(METABRIC_SUBSET_relapse$her2_status)
+METABRIC_SUBSET_relapse$hormone_therapy <- as.factor(METABRIC_SUBSET_relapse$hormone_therapy)
+METABRIC_SUBSET_relapse$inferred_menopausal_state <- as.factor(METABRIC_SUBSET_relapse$inferred_menopausal_state)
+METABRIC_SUBSET_relapse$integrative_cluster <- as.factor(METABRIC_SUBSET_relapse$integrative_cluster)
+METABRIC_SUBSET_relapse$primary_tumor_laterality <- as.factor(METABRIC_SUBSET_relapse$primary_tumor_laterality)
+METABRIC_SUBSET_relapse$pr_status <- as.factor(METABRIC_SUBSET_relapse$pr_status)
+METABRIC_SUBSET_relapse$radio_therapy <- as.factor(METABRIC_SUBSET_relapse$radio_therapy)
+METABRIC_SUBSET_relapse$pik3ca_mut <- as.factor(METABRIC_SUBSET_relapse$pik3ca_mut)
+METABRIC_SUBSET_relapse$tp53_mut <- as.factor(METABRIC_SUBSET_relapse$tp53_mut)
+METABRIC_SUBSET_relapse$brca_mut <- as.factor(METABRIC_SUBSET_relapse$brca_mut)
+METABRIC_SUBSET_relapse$akt_mut <- as.factor(METABRIC_SUBSET_relapse$akt_mut)
+METABRIC_SUBSET_relapse$pten_mut <- as.factor(METABRIC_SUBSET_relapse$pten_mut)
+METABRIC_SUBSET_relapse$cdh1_mut <- as.factor(METABRIC_SUBSET_relapse$cdh1_mut)
+
+for(i in 31:199) {
+  METABRIC_SUBSET_relapse[[i]] <- as.factor(METABRIC_SUBSET_relapse[[i]])
+}
+
+cols_to_remove <- sapply(METABRIC_SUBSET_relapse, function(x) is.factor(x) && length(levels(x)) < 2)
+METABRIC_SUBSET_relapse <- METABRIC_SUBSET_relapse[, !cols_to_remove]
+
+
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype <- as.factor(METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype)
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype <- relevel(METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype, ref = "LumA")
+
+METABRIC_SUBSET_relapse$NPI_stage <- as.character(METABRIC_SUBSET_relapse$NPI_stage)
+METABRIC_SUBSET_relapse$NPI_stage[METABRIC_SUBSET_relapse$NPI_stage %in% c("Excellent", "Good")] <- "Excellent_Good"
+METABRIC_SUBSET_relapse$NPI_stage <- factor(METABRIC_SUBSET_relapse$NPI_stage, levels = c("Excellent_Good", "Moderate", "Poor"))
+METABRIC_SUBSET_relapse$NPI_stage <- relevel(METABRIC_SUBSET_relapse$NPI_stage, ref = "Excellent_Good")
+
+METABRIC_SUBSET_relapse$tumor_size_stage <- as.character(METABRIC_SUBSET_relapse$tumor_size_stage)
+METABRIC_SUBSET_relapse$tumor_size_stage[METABRIC_SUBSET_relapse$tumor_size_stage %in% c("T2", "T3")] <- "T2_T3"
+METABRIC_SUBSET_relapse$tumor_size_stage <- factor(METABRIC_SUBSET_relapse$tumor_size_stage, levels = c("T1", "T2_T3"))
+
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade <- as.character(METABRIC_SUBSET_relapse$neoplasm_histologic_grade)
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade[METABRIC_SUBSET_relapse$neoplasm_histologic_grade %in% c("1", "2")] <- "1_2"
+METABRIC_SUBSET_relapse$neoplasm_histologic_grade <- factor(METABRIC_SUBSET_relapse$neoplasm_histologic_grade, levels = c("1_2", "3"))
+
+METABRIC_SUBSET_relapse$pos_lymph_nodes_stage <- as.character(METABRIC_SUBSET_relapse$pos_lymph_nodes_stage)
+METABRIC_SUBSET_relapse$pos_lymph_nodes_stage[METABRIC_SUBSET_relapse$pos_lymph_nodes_stage %in% c("pN2", "pN3")] <- "pN2_pN3"
+METABRIC_SUBSET_relapse$pos_lymph_nodes_stage <- factor(METABRIC_SUBSET_relapse$pos_lymph_nodes_stage, levels = c("pN0", "pN1", "pN2_pN3"))
+
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype <- as.character(METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype)
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype[METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype %in% c("Basal", "Her2")] <- "Basal_Her2"
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype[METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype %in% c("claudin-low", "Normal")] <- "claudin-low_Normal"
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype <- factor(METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype)
+METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype <- relevel(METABRIC_SUBSET_relapse$pam50_._claudin.low_subtype, ref = "LumA")
+```
+
+
+Univariate models to select just the meaningful variables
+
+```{r}
+covariates <- colnames(METABRIC_SUBSET_relapse)[!colnames(METABRIC_SUBSET_relapse) %in% c("relapse_within_5yr")]
+models <- list()
+pvalues <- list()
+
+for (covariate in covariates) {
+  # glm model
+  formula <- as.formula(paste("relapse_within_5yr ~", covariate))
+  glm_model <- glm(formula, family=binomial(link=logit), data = METABRIC_SUBSET_relapse)
+  
+  # save the model
+  models[[covariate]] <- glm_model
+  
+  # take the p-value
+  pvalue <- summary(glm_model)$coefficients[2,4]
+  
+  # save the p-value p-value
+  pvalues[[covariate]] <- pvalue
+}
+
+
+test <- p.adjust(pvalues, method = "BH")
+p_selection <- ifelse(test <= 0.05, test, NA)
+p_significant <- p_selection[!is.na(p_selection)]
+significant_variables <- names(p_significant)
+
+
+selected_variables <- c(significant_variables, "relapse_within_5yr")
+METABRIC_SUBSET_new_relapse <- METABRIC_SUBSET_relapse[, selected_variables, drop = FALSE]
+```
+
+Working on the training set
+
+```{r}
+set.seed(345)
+
+# Index for the training and test groups
+train_index <- createDataPartition(METABRIC_SUBSET_new_relapse$relapse_within_5yr, p = 0.7, list = FALSE, times = 1)
+
+# Creation of the training and test groups
+train_set <- METABRIC_SUBSET_new_relapse[train_index, ]
+test_set <- METABRIC_SUBSET_new_relapse[-train_index, ]
+
+
+
+# Creation of the full logistic model on the training set just to evaluate the collinearity
+glm_model <- glm(relapse_within_5yr ~ . , family = binomial(link = logit), data = train_set)
+
+# Compute VIF
+print(vif(glm_model))
+
+# Removal of the collinear variables
+train_set <- train_set[,-c(3,8,9,11,14)]
+test_set <- test_set[,-c(3,8,9,11,14)]
+
+# Convert in matrix format
+x_train <- model.matrix(relapse_within_5yr ~ ., train_set)[,-1] # rimuovi l'intercept
+y_train <- train_set$relapse_within_5yr
+
+# Optimal lambda value through cross validation
+cv.out <- cv.glmnet(x_train, y_train, alpha = 1, family = "binomial", type.measure = "mse")
+lambda_min <- cv.out$lambda.min
+cat("Lambda min:", lambda_min, "\n")
+
+# Coefficients 
+print(coef(cv.out, s = lambda_min))
+
+# Prediction on the training set and conversion in vector
+train_prob <- predict(cv.out, newx = x_train, s = lambda_min, type = "response")
+train_prob <- as.vector(train_prob)
+
+# Compute ROC curve and AUC on the training set
+roc_curve_train <- roc(y_train, train_prob)
+auc_train <- auc(roc_curve_train)
+print(paste("AUC:", auc_train))
+plot(roc_curve_train, main = "ROC Curve for Lasso Logistic Regression on Test Set")
+ci(roc_curve_train)
+
+# Select the best threshold. We select it in order to obtain 85% as sensitivity because we want a screeening test that is able to reduce at most the false negatives without impact too much the specificity. Diagnostic second level test can be then used to avoid false positives
+best_coords_train <- coords(roc_curve_train, x = 0.137, transpose = TRUE)
+best_threshold <- best_coords_train["threshold"]
+
+```
+
+Working on the test set
+
+```{r}
+# Conversion in matrix format for the test set
+x_test <- model.matrix(relapse_within_5yr ~ ., test_set)[,-1] # rimuovi l'intercept
+y_test <- test_set$relapse_within_5yr
+
+# Prediction on test set and conversion in vector
+lasso_prob <- predict(cv.out, newx = x_test, s = lambda_min, type = "response")
+lasso_prob <- as.vector(lasso_prob)
+
+# Apply the selected threshold
+lasso_predict <- ifelse(lasso_prob > best_threshold, "1", "0")
+
+# Confusion matrix
+conf_matrix <- table(pred = lasso_predict, true = y_test)
+print(conf_matrix)
+
+# Compute the ROC curve and AUC
+roc_curve_test <- roc(y_test, lasso_prob)
+auc_test <- auc(roc_curve_test)
+cat("AUC sul test set:", auc_test, "\n")
+
+# Plot
+plot(roc_curve_test, main = "ROC Curve for Lasso Logistic Regression on Test Set")
+ci(roc_curve_test)
+```
+
+Considering the high number of selected variables, we try to eliminate some of them based on the clinical significance without impact too much our model. So, we perform the same procedure again.
+
+```{r}
+set.seed(345)
+
+# Index for the training and test groups
+train_index <- createDataPartition(METABRIC_SUBSET_new_relapse$relapse_within_5yr, p = 0.7, list = FALSE, times = 1)
+
+# Creation of the training and test groups
+train_set <- METABRIC_SUBSET_new_relapse[train_index, ]
+test_set <- METABRIC_SUBSET_new_relapse[-train_index, ]
+
+# Removal of the less significant variables from a clinical point of view + the ones from multicollinearity
+train_set <- train_set[,-c(1,2, 3, 7,8,9,11, 14, 16, 17, 18, 19)]
+test_set <- test_set[,-c(1, 2, 3, 7,8,9,11, 14, 16, 17, 18, 19)]
+
+# Conversion in matrix format
+x_train <- model.matrix(relapse_within_5yr ~ ., train_set)[,-1] # rimuovi l'intercept
+y_train <- train_set$relapse_within_5yr
+
+# Optimal lambda through cross validation
+cv.out <- cv.glmnet(x_train, y_train, alpha = 1, family = "binomial", type.measure = "mse")
+
+lambda_min <- cv.out$lambda.min
+cat("Lambda min:", lambda_min, "\n")
+
+# Coefficients
+print(coef(cv.out, s = lambda_min))
+
+# Prediction on the training set
+train_prob <- predict(cv.out, newx = x_train, s = lambda_min, type = "response")
+train_prob <- as.vector(train_prob)
+
+# Compute ROC curve and AUC
+roc_curve_train <- roc(y_train, train_prob)
+auc_train <- auc(roc_curve_train)
+print(paste("AUC:", auc_train))
+plot(roc_curve_train, main = "ROC Curve for Lasso Logistic Regression on Test Set")
+ci(roc_curve_train)
+
+# Choosing the threshold as before, so I want a 85% of sensitivity
+best_coords_train <- coords(roc_curve_train, x = 0.15, transpose = TRUE)
+best_coords_train
+best_threshold <- best_coords_train["threshold"]
+
+# Conversion in matrix format
+x_test <- model.matrix(relapse_within_5yr ~ ., test_set)[,-1] # rimuovi l'intercept
+y_test <- test_set$relapse_within_5yr
+
+# Prediction on test set
+lasso_prob <- predict(cv.out, newx = x_test, s = lambda_min, type = "response")
+lasso_prob <- as.vector(lasso_prob)
+
+# Apply the selected threshold
+lasso_predict <- ifelse(lasso_prob > best_threshold, "1", "0")
+
+# Confusion matrix
+conf_matrix <- table(pred = lasso_predict, true = y_test)
+print(conf_matrix)
+
+# Compute ROC curve and AUC
+roc_curve_test <- roc(y_test, lasso_prob)
+auc_test <- auc(roc_curve_test)
+cat("AUC sul test set:", auc_test, "\n")
+
+# Plot
+plot(roc_curve_test, main = "ROC Curve for Lasso Logistic Regression on Test Set")
+ci(roc_curve_test)
+```
+
