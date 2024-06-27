@@ -22,8 +22,7 @@ Preparation of dataset for cox model
 #Remove the variable death from cancer
 cox2 <- METABRIC_COX_SUBSET[,-24]
 
-cox2 <- cox2[cox2$primary_tumor_laterality!=""
-                                                   & cox2$type_of_breast_surgery!="",]
+cox2 <- cox2[cox2$primary_tumor_laterality != "" & cox2$type_of_breast_surgery != "",]
 
 cox2$type_of_breast_surgery <- as.factor(cox2$type_of_breast_surgery)
 cox2$cancer_type_detailed <- as.factor(cox2$cancer_type_detailed)
@@ -49,13 +48,15 @@ cox2$brca_mut <- as.factor(cox2$brca_mut)
 cox2$akt_mut <- as.factor(cox2$akt_mut)
 cox2$pten_mut <- as.factor(cox2$pten_mut)
 cox2$cdh1_mut <- as.factor(cox2$cdh1_mut)
+cox2$RFS_years <- NULL
+cox2$RFS_STATUS <- NULL
+
+
 
 cox2_junior <- cox2
 
 cox2_junior$NPI_stage <- factor(cox2_junior$NPI_stage, levels = c("Excellent", "Good", "Moderate", "Poor"))
 cox2_junior$NPI_stage <- relevel(cox2_junior$NPI_stage, ref = "Excellent")
-
-
 ```
 
 
@@ -73,10 +74,8 @@ In all the following steps I remove the variables causing warnings
 ```{r}
 coxph(Surv(overall_survival_years, overall_survival) ~ cancer_type_detailed, 
            data = cox2)     #not significant, we can easily remove it
-coxph(Surv(overall_survival_years, overall_survival) ~ RFS_STATUS, 
-           data = cox2)   #significant, but still we remove it to avoid warning
 
-cox3 <- cox2[,-c(3,26)]
+cox3 <- cox2[,-c(3)]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox3)
 summary(a)
@@ -84,25 +83,19 @@ summary(a)
 
 coxph(Surv(overall_survival_years, overall_survival) ~ tumor_other_histologic_subtype, 
            data = cox3)    #not significant
+
 cox4 <- cox3[,-9]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
            data = cox4)
 summary(a)
 
 
-coxph(Surv(overall_survival_years, overall_survival) ~ cohort, 
-           data = cox4)   #not significant
-cox5 <- cox4[,-5]
-a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-           data = cox5)
-summary(a)
-
-
 coxph(Surv(overall_survival_years, overall_survival) ~ oncotree_code, 
            data = cox5)   #not significant
-cox6 <- cox5[,-14]
+
+cox5 <- cox4[,-15]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-           data = cox6)
+           data = cox5)
 summary(a)
 ```
 
@@ -111,12 +104,12 @@ Finally this model doesn't cause any warnings
 
 ```{r}
 coxph(Surv(overall_survival_years, overall_survival) ~ mutation_count, 
-           data = cox6)    #not significant
+           data = cox5)    #not significant
 coxph(Surv(overall_survival_years, overall_survival) ~ TMB_NONSYNONYMOUS, 
-           data = cox6)    #not significant
-cox7 <- cox6[,-c(13,20)]
+           data = cox5)    #not significant
+cox6 <- cox5[,-c(14,21)]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-           data = cox7)
+           data = cox6)
 summary(a)
 ```
 
@@ -124,57 +117,30 @@ Keeping only the significant variables
 
 ```{r}
 b <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis + 
-             er_status_measured_by_ihc + pr_status + tumor_stage + RFS_years + 
-             pik3ca_mut + tp53_mut , data = cox7)
+             hormone_therapy + inferred_menopausal_state + tumor_size + 
+             tumor_stage + tp53_mut , data = cox6)
+c <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis + 
+             inferred_menopausal_state + tumor_size + 
+             tumor_stage + tp53_mut , data = cox6)
 
-summary(b)
-cox.zph(b)
+summary(c)
+cox.zph(c)
+
+c_tp53strata <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis + 
+             strata(inferred_menopausal_state) + tumor_size + 
+             tumor_stage + strata(tp53_mut) , data = cox6)
+
+cox.zph(c_tp53strata)
+
+cox6_split <- survSplit(Surv(overall_survival_years, overall_survival) ~ . , 
+                        data = cox6, cut = c(8, 16), episode = "tgroup", id = "id")
+
+#cox6_split$tumor_stage <- ifelse(as.integer(cox6_split$tumor_stage) >= 3, '3_4', as.integer(cox6_split$tumor_stage) )
+
+
+c_split <- coxph(Surv(tstart, overall_survival_years, overall_survival) ~ age_at_diagnosis:strata(tgroup)
+                 + tumor_size + strata(tumor_stage) + strata(tp53_mut) + inferred_menopausal_state
+                 , data = cox6_split)
+summary(c_split)
+cox.zph(c_split)
 ```
-
-
-Univariats tests
-```{r}
-
-SurvObj <- Surv(cox2_junior$overall_survival_years, cox2_junior$overall_survival)
-covariates <- colnames(cox2_junior)[!colnames(cox2_junior) %in% c("survival_time", "status")]
-
-models <- list()
-p_values <- list()
-p_all <- list()
-
-for (covariate in covariates) {
-  cox_model <- coxph(formula = as.formula(paste("SurvObj ~", covariate)), data = cox2_junior)
-  
-  models[[covariate]] <- cox_model
-  
-  p_value <- summary(cox_model)$logtest["pvalue"]
-  
-  p_values[[covariate]] <- p_value
-  
-  p_all[[covariate]] <- summary(cox_model)$coefficients[, "Pr(>|z|)"]
-  
-}
-
-#test su loglikelihood p
-test <- p.adjust(p_values, method = "BH")
-p_significant <- ifelse(test <= 0.05, test, NA)
-significant_variables <- p_significant[!is.na(p_significant)]
-  
-significant_variables_nomi <- names(significant_variables)
-significant_variables <- significant_variables[significant_variables_nomi!= "RFS_STATUS" & significant_variables_nomi!= "RFS_years" & significant_variables_nomi!= "overall_survival_years" & significant_variables_nomi!= "overall_survival"]
-
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-#rifare qui test multipli su p_all e da qui tenere le prime 20 come sotto (ma i primi 20 livelli, non variaili, forse conviene accorpare alcuni fattori), poi fare il cox con il dataset piccolo
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-
-
-top20 <- sort(significant_variables_all)[1:20]
-
-METABRIC_COX_SUBSET_VERO <- cox2_junior[,significant_variables_nomi]
-coxmodel1 <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 
-      data = METABRIC_COX_SUBSET_VERO)
-summary(coxmodel1)
-```
-The significant variables in univariate test are in p_significant
-
-

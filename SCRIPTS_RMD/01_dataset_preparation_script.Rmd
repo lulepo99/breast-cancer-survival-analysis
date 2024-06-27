@@ -16,7 +16,7 @@ filename <- "https://cbioportal-datahub.s3.amazonaws.com/brca_metabric.tar.gz"
 
 # Check that the final size of "temporary.tar.gz" is exactly 486.7 MB (otherwise 
 # remove it and re-download)
-options(timeout=100)
+options(timeout=200)
 download.file(filename, destfile = "temporary.tar.gz") # In case of errors due to timeout, try to increase the timeout in the above command
 
 # Check that all 3 files are there (might not be the case): 

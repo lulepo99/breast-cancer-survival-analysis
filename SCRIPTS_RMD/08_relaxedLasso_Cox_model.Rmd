@@ -20,7 +20,7 @@ library(glmnet)
 # Dataset ottenuto togliendo tutte le righe con almeno un NA
 cox2_wo_null <- na.omit(cox2)
 
-df_x <- cox2_wo_null[,-c(18,19,25)]    # Tolto anche RFS_STATUS
+df_x <- cox2_wo_null[,-c(18,19,25,26)]    # Tolto anche RFS_STATUS
 
 y <- Surv(cox2_wo_null$overall_survival_years, cox2_wo_null$overall_survival)
 
@@ -39,4 +39,52 @@ plot(fit_cv.glmnet)
 
 coef(fit_cv.glmnet, s = best_lambda)
 ```
+```{r}
+cox_afterLasso <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis +
+                          type_of_breast_surgery + cellularity  + neoplasm_histologic_grade +
+                          hormone_therapy + integrative_cluster + lymph_nodes_examined_positive +
+                          pr_status + radio_therapy + tumor_size + tumor_stage +
+                          tumor_size_stage + pos_lymph_nodes_stage + NPI_stage + 
+                          tp53_mut + brca_mut + akt_mut
+                 , data = cox2_wo_null)
+summary(cox_afterLasso)
 
+# Teniamo solo quelle significative:
+cox_afterLasso_filtered <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis +
+                          hormone_therapy + integrative_cluster +
+                          radio_therapy + tumor_size + tumor_stage +
+                          tp53_mut + brca_mut
+                 , data = cox2_wo_null)
+summary(cox_afterLasso_filtered)
+
+
+# Teniamo solo quelle significative:
+cox_afterLasso_filtered2 <- coxph(Surv(overall_survival_years, overall_survival) ~ age_at_diagnosis +
+                          hormone_therapy + integrative_cluster +
+                          tumor_size + tumor_stage +
+                          tp53_mut + brca_mut
+                 , data = cox2_wo_null)
+
+summary(cox_afterLasso_filtered2)
+cox.zph(cox_afterLasso_filtered2)
+
+cox2_wo_null_split <- survSplit(Surv(overall_survival_years, overall_survival) ~ . , 
+                        data = cox2_wo_null, cut = c(8, 16), episode = "tgroup", id = "id")
+
+cox2_wo_null_split$tumor_stage <- ifelse(as.integer(cox2_wo_null_split$tumor_stage) >= 3, '3_4', as.integer(cox2_wo_null_split$tumor_stage))
+
+
+# Senza integrative cluster
+cox_afterLasso_filtered3_split <- coxph(Surv(tstart, overall_survival_years, overall_survival) ~                      
+                                          age_at_diagnosis:strata(tgroup)
+                                          + tumor_size + strata(tumor_stage):id 
+                                          + strata(tp53_mut):id 
+                                          + strata(hormone_therapy):id
+                                          + brca_mut,
+                                      data = cox2_wo_null_split)
+
+summary(cox_afterLasso_filtered3_split)
+cox.zph(cox_afterLasso_filtered3_split)
+
+
+```
