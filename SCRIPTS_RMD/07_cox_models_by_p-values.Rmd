@@ -91,7 +91,7 @@ summary(a)
 
 
 coxph(Surv(overall_survival_years, overall_survival) ~ oncotree_code, 
-           data = cox5)   #not significant
+           data = cox4)   #not significant
 
 cox5 <- cox4[,-15]
 a <- coxph(Surv(overall_survival_years, overall_survival) ~ ., 

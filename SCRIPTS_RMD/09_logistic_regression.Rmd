@@ -152,8 +152,8 @@ glm_model <- glm(relapse_within_5yr ~ . , family = binomial(link = logit), data 
 print(vif(glm_model))
 
 # Removal of the collinear variables
-train_set <- train_set[,-c(3,8,9,11,14)]
-test_set <- test_set[,-c(3,8,9,11,14)]
+train_set <- train_set[,-c(3,8,9,10,11,14)]
+test_set <- test_set[,-c(3,8,9,10,11,14)]
 
 # Convert in matrix format
 x_train <- model.matrix(relapse_within_5yr ~ ., train_set)[,-1] # rimuovi l'intercept
@@ -167,6 +167,13 @@ cat("Lambda min:", lambda_min, "\n")
 # Coefficients 
 print(coef(cv.out, s = lambda_min))
 
+
+# Check if variables are significant
+logistic_final <- glm(relapse_within_5yr ~ er_status_measured_by_ihc +
+        neoplasm_histologic_grade + her2_status + tumor_size_stage + pos_lymph_nodes_stage +
+        tp53_mut, family=binomial(link=logit), data = METABRIC_SUBSET_new_relapse)
+summary(logistic_final)
+
 # Prediction on the training set and conversion in vector
 train_prob <- predict(cv.out, newx = x_train, s = lambda_min, type = "response")
 train_prob <- as.vector(train_prob)
@@ -178,7 +185,7 @@ print(paste("AUC:", auc_train))
 plot(roc_curve_train, main = "ROC Curve for Lasso Logistic Regression on Test Set")
 ci(roc_curve_train)
 
-# Select the best threshold. We select it in order to obtain 85% as sensitivity because we want a screeening test that is able to reduce at most the false negatives without impact too much the specificity. Diagnostic second level test can be then used to avoid false positives
+# Select the best threshold. We select it in order to obtain 85% as sensitivity because we want a screening test that is able to reduce at most the false negatives without impact too much the specificity. Diagnostic second level test can be then used to avoid false positives
 best_coords_train <- coords(roc_curve_train, x = 0.137, transpose = TRUE)
 best_threshold <- best_coords_train["threshold"]
 
@@ -225,8 +232,8 @@ train_set <- METABRIC_SUBSET_new_relapse[train_index, ]
 test_set <- METABRIC_SUBSET_new_relapse[-train_index, ]
 
 # Removal of the less significant variables from a clinical point of view + the ones from multicollinearity
-train_set <- train_set[,-c(1,2, 3, 7,8,9,11, 14, 16, 17, 18, 19)]
-test_set <- test_set[,-c(1, 2, 3, 7,8,9,11, 14, 16, 17, 18, 19)]
+train_set <- train_set[,-c(1,2, 3, 7,8,9,10,11, 14, 16, 17, 18, 19)]
+test_set <- test_set[,-c(1, 2, 3, 7,8,9,10,11, 14, 16, 17, 18, 19)]
 
 # Conversion in matrix format
 x_train <- model.matrix(relapse_within_5yr ~ ., train_set)[,-1] # rimuovi l'intercept
