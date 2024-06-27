@@ -200,6 +200,13 @@ chi.test_cdh1$observed
 chi.test_cdh1$expected
 chi.test_cdh1
 ```
+```{r}
+df_for_test <- df_for_test[!is.na(df_for_test$tumor_stage), ]
+chi.test_stage <- chisq.test(df_for_test$overall_survival, df_for_test$tumor_stage)
+chi.test_stage$observed
+chi.test_stage$expected
+chi.test_stage
+```
 
 ```{r}
 rm(df_for_test)
